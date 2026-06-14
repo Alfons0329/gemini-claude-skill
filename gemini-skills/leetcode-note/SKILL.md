@@ -32,10 +32,15 @@ Automates the process of saving finalized LeetCode discussions into Notion or lo
 
 ### 4. Note Generation
 
+#### Formatting Guidelines (Mandatory)
+- **Inline Code:** Use `CODE` style (backticks in Markdown, code annotation in Notion) for all variables (e.g., `l`, `m`, `r`), expressions (e.g., `m = l + (r-l)/2`), code snippets (e.g., `nums[m] <= nums[r-1]`), and complexity notations (e.g., `O(log N)`).
+- **Bold Headers:** Use bold for section headers within the body (e.g., **Intuition:**, **Complexity:**).
+- **Rich Text:** Ensure descriptions are comprehensive and reflect the specific insights from the discussion.
+
 #### Mode A: Per-Problem Note (Default)
 - **Format:**
   - Header: Problem ID & Name
-  - Body: Intuition, Approach, Complexity, Feedback (optional), and Code.
+  - Body: Intuition, Approach, Complexity, Follow-ups (if any), and Code.
 - **Action:** Full rewrite or append to the target page.
 
 #### Mode B: Holistic Pattern Note (`template` mode)
