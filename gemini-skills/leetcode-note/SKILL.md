@@ -5,7 +5,7 @@ description: Automated note-taking and pattern-guide generation for LeetCode pro
 
 # LeetCode Note Skill
 
-Automates the process of saving finalized LeetCode discussions into Notion or local markdown files. This skill ensures your study guides and problem notes stay synchronized with your latest insights.
+Automates the process of saving finalized LeetCode discussions directly into Notion. This skill ensures your study guides and problem notes stay synchronized with your latest insights without generating local markdown files in the workspace.
 
 ## Core Workflow
 
@@ -36,6 +36,7 @@ Automates the process of saving finalized LeetCode discussions into Notion or lo
 - **Inline Code:** Use `CODE` style (backticks in Markdown, code annotation in Notion) for all variables (e.g., `l`, `m`, `r`), expressions (e.g., `m = l + (r-l)/2`), code snippets (e.g., `nums[m] <= nums[r-1]`), and complexity notations (e.g., `O(log N)`).
 - **Bold Headers:** Use bold for section headers within the body (e.g., **Intuition:**, **Complexity:**).
 - **Rich Text:** Ensure descriptions are comprehensive and reflect the specific insights from the discussion.
+- **Notion-First with Local Fallback:** Attempt to synchronize notes directly to the Notion page. If Notion is inaccessible after a reasonable retry limit (e.g., 3 attempts), write the local `.md` file to the workspace instead. Be sure to provide the local path to the user, and allow them to override it if needed.
 
 #### Mode A: Per-Problem Note (Default)
 - **Format:**
