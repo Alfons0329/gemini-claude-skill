@@ -38,6 +38,7 @@ To streamline the process of summarizing LeetCode discussions into structured pe
 
 #### Mode B: Holistic Pattern Note (Template)
 - **Structure:** Summarizes patterns across multiple problems (e.g., Dijkstra’s philosophy, [L, R) intervals).
+    - **Intuition Header:** Includes the section `## 💡 When should I use this algorithmic approach?` at the top of the manual page, explaining the use case and providing an authoritative reference link.
 - **Update Logic:** **Partial Overwrite**. 
     - Use **Header-Based Parsing** to identify relevant sections (e.g., "Pattern 1: Exact Match").
     - Overwrite only the sections concerned by the current batch of problems.
