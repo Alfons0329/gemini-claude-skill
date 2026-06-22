@@ -47,6 +47,7 @@ Automates the process of saving finalized LeetCode discussions directly into Not
 #### Mode B: Holistic Pattern Note (`template` mode)
 - **Logic:** **Partial Overwrite**.
 - **Header-Based Parsing:** Identify specific sections (e.g., "Pattern 2: Lower Bound") and update only those relevant to the current discussion.
+- **Intuition Section:** Always check for and update the `## 💡 When should I use this algorithmic approach?` section at the top of the page with a clear explanation of the pattern's applicability and an authoritative reference link (e.g., from GeeksforGeeks).
 - **Constraint:** One pattern per command.
 
 ### 5. Technical Details
