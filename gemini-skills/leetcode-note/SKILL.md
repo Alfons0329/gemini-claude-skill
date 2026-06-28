@@ -32,17 +32,26 @@ Automates the process of saving finalized LeetCode discussions directly into Not
 
 ### 4. Note Generation
 
+#### Database-Page Style Updates (Mandatory)
+- **Target Location:** Always write/update the problem notes directly inside the **sub-page body of the corresponding database row** in the topic's inline database (e.g. write inside the page for "76. Minimum Window Substring" inside the "Problems" database of the "Sliding Window" topic).
+- **Parent Page:** The parent topic page (e.g., "Sliding Window") should only contain the inline database link/block and any general topic-level guides. It must **not** contain duplicate problem notes/code blocks.
+- **Workflow:**
+  1. Retrieve the parent page to find the inline database properties and ID.
+  2. Locate the database row page corresponding to the target problem (using search `API-post-search` or querying the data source).
+  3. Write/update the detailed problem notes inside that sub-page's body.
+  4. Ensure any duplicate text of that problem note on the parent page is removed.
+
 #### Formatting Guidelines (Mandatory)
 - **Inline Code:** Use `CODE` style (backticks in Markdown, code annotation in Notion) for all variables (e.g., `l`, `m`, `r`), expressions (e.g., `m = l + (r-l)/2`), code snippets (e.g., `nums[m] <= nums[r-1]`), and complexity notations (e.g., `O(log N)`).
 - **Bold Headers:** Use bold for section headers within the body (e.g., **Intuition:**, **Complexity:**).
 - **Rich Text:** Ensure descriptions are comprehensive and reflect the specific insights from the discussion.
-- **Notion-First with Local Fallback:** Attempt to synchronize notes directly to the Notion page. If Notion is inaccessible after a reasonable retry limit (e.g., 3 attempts), write the local `.md` file to the workspace instead. Be sure to provide the local path to the user, and allow them to override it if needed.
+- **Notion-First with Local Fallback:** Attempt to synchronize notes directly to the Notion database page. If Notion is inaccessible after a reasonable retry limit (e.g., 3 attempts), write the local `.md` file to the workspace instead. Be sure to provide the local path to the user, and allow them to override it if needed.
 
 #### Mode A: Per-Problem Note (Default)
 - **Format:**
   - Header: Problem ID & Name
   - Body: Intuition, Approach, Complexity, Follow-ups (if any), and Code.
-- **Action:** Full rewrite or append to the target page.
+- **Action:** Full rewrite or update of the database sub-page body.
 
 #### Mode B: Holistic Pattern Note (`template` mode)
 - **Logic:** **Partial Overwrite**.
