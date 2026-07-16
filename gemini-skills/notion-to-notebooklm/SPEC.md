@@ -20,6 +20,10 @@ Extract Notion pages (and their nested subpages) into a unified, NotebookLM-acti
    - **Decision:** The helper script will be a Python script stored in `$HOME/code/gemini-claude-skill/shared/scripts`, utilizing the official `notion-client` library, and authenticating via the `NOTION_TOKEN` environment variable.
    - **Rationale:** Standardizing on Python and `notion-client` ensures portability, performance, and compatibility across developer environments, while utilizing standard environment variables for secure authentication.
 
+5. **Podcast-Friendly Artifact & Prompt Generation** `[DESIGN_DECISION]`
+   - **Decision:** After downloading the raw Markdown, the skill will perform an LLM phase to generate a Q&A-style `-podcast-guide.md` file and a customized `<page-slug>-podcast-prompt.txt` file.
+   - **Rationale:** Separating the raw reference material from the conversation-optimized study guide makes it easy to import both into NotebookLM, producing a much higher quality audio overview.
+
 ## Confirmed Constraints
 - **Read-Only Access:** The skill and scripts must operate in a strictly read-only mode relative to Notion. They must NOT create, delete, or modify any Notion pages or blocks.
 - **Fail Fast:** Surface any Notion API / MCP errors immediately to the user without guessing or attempting silent recovery.
@@ -34,7 +38,10 @@ Extract Notion pages (and their nested subpages) into a unified, NotebookLM-acti
   4. Recursively fetch each child page's contents unless excluded by the user's `--human-override`.
   5. Fetch page contents as Markdown (utilizing Notion block traversal or `API-retrieve-page-markdown` from Notion MCP).
   6. Output a single concatenated Markdown file to the specified `<output-path>`.
-- **Output Filename:** Name in lowercase, breadcrumbs separated by `--`, with spaces replaced by single dashes `-`.
+- **Output Filenames:** 
+  - Raw file: Named in lowercase, breadcrumbs separated by `--`, with spaces replaced by single dashes `-` (e.g., `system-design--distributed-system.md`).
+  - Podcast Guide: `<raw-filename-without-ext>-podcast-guide.md` (saved in the same directory as the raw file).
+  - Podcast Prompt: `<raw-filename-without-ext>-podcast-prompt.txt` (saved in `--prompt-output-dir` if provided, otherwise alongside the guide).
 
 ## Handover Section
 To begin implementation in the next session:
@@ -42,11 +49,12 @@ To begin implementation in the next session:
 2. Implement `notion_to_markdown.py` which:
    - Accepts arguments: `<notion-page-url>`, `<output-path>`, and optionally `--exclude` (list of subpage titles or IDs parsed from override).
    - Extracts page ID, fetches blocks, traverses nested pages recursively, and constructs breadcrumbs.
-   - Outputs the combined Markdown file to `<output-path>` named in the breadcrumb format (e.g., `system-design--distributed-system.md`).
+   - Outputs the combined Markdown file to `<output-path>` named in the breadcrumb format.
 3. Define the `/notion-to-notebooklm` skill in `gemini-skills/notion-to-notebooklm/SKILL.md` to:
-   - Handle argument parsing.
+   - Handle argument parsing (including `--prompt-output-dir`).
    - Use an LLM call to process `--human-override` into a clean structured list of exclusions.
    - Invoke the Python helper script with the correct parameters.
+   - Trigger the LLM phase to generate the podcast study guide and custom prompt, and write them to disk.
 4. Verify by running local tests with active Notion tokens.
 
 ## Open Items
