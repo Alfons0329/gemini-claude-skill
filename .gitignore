@@ -8,3 +8,8 @@ __pycache__/
 # Directory-level rule so moving/adding files here stays covered.
 productivity/harness-eng/ref/
 productivity/harness-eng/reference.md
+
+# Personal examples containing real Notion page IDs.
+# notion-to-notebooklm/SPEC.md states: "Only commit SPEC.md. Do not track or
+# commit EXAMPLE.md" — enforced here rather than left to memory.
+EXAMPLE.md
