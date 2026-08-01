@@ -37,7 +37,7 @@ Automates the process of saving finalized LeetCode discussions directly into Not
 - **Parent Page:** The parent topic page (e.g., "Sliding Window") should only contain the inline database link/block and any general topic-level guides. It must **not** contain duplicate problem notes/code blocks.
 - **Workflow:**
   1. Retrieve the parent page to find the inline database properties and ID.
-  2. Locate the database row page corresponding to the target problem (using search `API-post-search` or querying the data source).
+  2. Locate the database row page corresponding to the target problem (using search `API-post-search` or querying the data source via Notion tools/MCP).
   3. Write/update the detailed problem notes inside that sub-page's body.
   4. Ensure any duplicate text of that problem note on the parent page is removed.
 
@@ -60,7 +60,7 @@ Automates the process of saving finalized LeetCode discussions directly into Not
 - **Constraint:** One pattern per command.
 
 ### 5. Technical Details
-- **External Fetch:** Use `web_fetch` to retrieve official problem details from LeetCode/NeetCode to confirm ID and metadata.
+- **External Fetch:** Use web fetching tools (`web_fetch`, `read_url_content`, or `WebFetch`) to retrieve official problem details from LeetCode/NeetCode to confirm ID and metadata.
 - **State:** Stateless. RELY on the current session's history for takeaways.
 - **Code:** Do not modify user logic.
 

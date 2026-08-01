@@ -13,14 +13,14 @@ Simulates a high-level Staff Engineer interview focused on architectural scalabi
 - **Trigger:** `/sys-design-interview <resume_path> <jd_url> [mode: jd-based|general] [questions: N]` (default is 5 if not specified)
 - **Research Phase (Silent):**
     - Read and analyze the candidate's resume from `<resume_path>`.
-    - Fetch and analyze the JD from `<jd_url>` using `web_fetch`.
+    - Fetch and analyze the JD from `<jd_url>` using web fetching tools (`web_fetch`, `read_url_content`, or `WebFetch`).
 - **Mode-Specific Setup:**
     - **jd-based:** Identify core architectural challenges and domain constraints from the JD.
     - **general:** Identify 3 common system design topics (e.g., URL shortener, Rate Limiter, News Feed) tailored to the level of the role.
 - **Confirmation Phase:**
     - **JD/Resume Summary:** Briefly summarize the "Must Have" skills and candidate profile.
     - **Topic Selection:**
-        - If `general`: Present a list of 3 tailored system design options for the user to choose from using `ask_user`.
+        - If `general`: Present a list of 3 tailored system design options for the user to choose from using interactive question tools (`ask_user`, `ask_question`, or direct prompt).
         - If `jd-based`: Propose the primary architectural focus (e.g., "Designing the memory subsystem for an NVIDIA SoC") and wait for confirmation.
 
 ### 2. Interview Phase
@@ -36,7 +36,7 @@ Simulates a high-level Staff Engineer interview focused on architectural scalabi
 ### 3. Termination & Report
 - **Exit:** Triggered after the final question or if the user says "stop/end".
 - **End-of-Session Report:**
-    - **Format:** Formatted matching the layout of `mock_interview_feedback-20260707.md`.
+    - **Format:** Formatted matching structured interview evaluation layout.
     - **Metadata Header:** Position, Company, Candidate, and Interview Mode (specifying the number of questions).
     - **Hiring Assessment:** Blockquote using alert style (`> [!NOTE]`) with the 4-point scale rating (**Strong Hire**, **Hire**, **Leaning No**, **No Hire**) and Staff-level justification.
     - **Detailed Answer Feedback:** Category-by-category critiques (e.g., Storage Caching, Concurrency, etc.) containing:

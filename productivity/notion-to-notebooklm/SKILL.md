@@ -27,9 +27,9 @@ Extracts a Notion page and all of its subpages recursively and saves them as a s
   - *Example:* If no exclusions are specified or override is empty, the list is empty.
 
 ### Step 3: Script Execution
-- Locate the Python helper script at [notion_to_markdown.py](shared/scripts/notion_to_markdown.py).
+- Locate the Python helper script at [notion_to_markdown.py](file:///shared/scripts/notion_to_markdown.py).
 - Build the command line argument list. If exclusions were extracted from the override in Step 2, append `--exclude "<comma-separated-list>"` to the command.
-- Execute the script using `run_command` in the workspace directory:
+- Execute the script using command execution tools (`run_command`, `Bash`, or terminal execution) in the workspace directory:
   ```bash
   python3 shared/scripts/notion_to_markdown.py "<notion-page-url>" "<output-path>" [--exclude "<exclusions>"]
   ```

@@ -16,8 +16,8 @@ Automates the process of generating structured, batched study roadmaps on parent
   - Ensure a valid Notion parent page URL or ID is provided.
 
 ### 2. Extraction Phase (Silent Phase)
-- **Web scraping / Local reading:** Retrieve problem numbers, titles, difficulties, and sub-topics from the source.
-- **Database Query:** Query the parent page's inline database to identify existing page references and match them with extracted problems.
+- **Web scraping / Local reading:** Retrieve problem numbers, titles, difficulties, and sub-topics from the source using available tools (`web_fetch`, `read_url_content`, `view_file`, or `WebFetch`).
+- **Database Query:** Query the parent page's inline database via Notion API tools to identify existing page references and match them with extracted problems.
 
 ### 3. Database Updates
 - For any extracted problem that is missing from the database, create a new row page inside the database.

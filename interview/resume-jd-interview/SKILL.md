@@ -13,7 +13,7 @@ Simulates a realistic, high-pressure interview with a Hiring Manager focused on 
 - **Trigger:** `/resume-interview <resume_path> <jd_url> [mode: technical|behavioral]`
 - **Research Phase (Silent):**
     - Analyze the resume from the provided path.
-    - Fetch and analyze the JD from the URL using `web_fetch`.
+    - Fetch and analyze the JD from `<jd_url>` using web fetching tools (`web_fetch`, `read_url_content`, or `WebFetch`).
 - **JD Confirmation Phase:**
     - Summarize the core "Must Have" skills and requirements identified from the JD.
     - **Hard Gate:** The user must confirm: "Yes, this is the role I'm preparing for" before the interview begins.
