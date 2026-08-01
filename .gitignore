@@ -2,3 +2,7 @@ __pycache__/
 *.pyc
 *.skill
 .DS_Store
+
+# Tier 2 — private reference material (mentor's harness, internal docs).
+# Never commit: contains real ticket IDs and internal repo paths.
+productivity/harness-eng/reference.md
