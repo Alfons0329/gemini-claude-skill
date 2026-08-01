@@ -3,6 +3,8 @@ __pycache__/
 *.skill
 .DS_Store
 
-# Tier 2 — private reference material (mentor's harness, internal docs).
-# Never commit: contains real ticket IDs and internal repo paths.
+# Tier 2 — private reference material (internal harness docs, company skills).
+# Never commit: contains real ticket IDs, internal acronyms, and customer scenarios.
+# Directory-level rule so moving/adding files here stays covered.
+productivity/harness-eng/ref/
 productivity/harness-eng/reference.md
