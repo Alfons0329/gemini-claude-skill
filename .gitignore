@@ -5,9 +5,9 @@ __pycache__/
 
 # Tier 2 — private reference material (internal harness docs, company skills).
 # Never commit: contains real ticket IDs, internal acronyms, and customer scenarios.
-# Directory-level rule so moving/adding files here stays covered.
-productivity/harness-eng/ref/
-productivity/harness-eng/reference.md
+# Kept OUTSIDE productivity/ on purpose: those directories get copied to
+# ~/.claude/skills/, and private files must not ride along with an install.
+_private/
 
 # Personal examples containing real Notion page IDs.
 # notion-to-notebooklm/SPEC.md states: "Only commit SPEC.md. Do not track or

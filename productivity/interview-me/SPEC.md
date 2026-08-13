@@ -5,7 +5,7 @@
 
 ## Goal
 
-One canonical skill, tuned for Claude Code, usable in **any** company or project. It is both a standalone tool and the interview engine that `/spec-create` delegates to in the Phase 1 harness (`../spec-phase-1.md` §8).
+One canonical skill, tuned for Claude Code, usable in **any** company or project. It is both a standalone tool and the interview engine the harness's `spec` stage delegates to (`../harness-eng/SPEC.md` §8).
 
 ## Lineage
 
@@ -24,7 +24,7 @@ Reconstructed as generic method. No employer names, ticket identifiers, internal
    **This is a conscious exception to the repo-wide cross-AI-agent rule in `CLAUDE.md`.**
 
 2. **The skill reads conventions; it never embeds them.** `[CONSTRAINT]`
-   Test order, branch naming, commit format, and framework choices are read from `CLAUDE.md` at runtime and recorded under "Pre-filled context." *Rationale:* the in-house version declared itself project-independent while hardcoding its employer's test-order convention into the output template — silently imposing it on any other project. Reading at runtime is what actually makes the skill portable. Same decision as Q3 in `../spec-phase-1.md` §9.
+   Test order, branch naming, commit format, and framework choices are read from `CLAUDE.md` at runtime and recorded under "Pre-filled context." *Rationale:* the in-house version declared itself project-independent while hardcoding its employer's test-order convention into the output template — silently imposing it on any other project. Reading at runtime is what actually makes the skill portable. Same decision as Q3 in `../harness-eng/SPEC.md`, now resolved there in §7.1.
 
 3. **Two of the five gap classes exist to suppress questions.** `[NON_OBVIOUS]`
    `ALREADY_KNOWN` pre-fills silently; `DERIVABLE` states the assumption and confirms once in bulk. *Rationale:* the earlier version of this skill specified all five classes but implemented only the three that *generate* questions — so it had no mechanism to stay quiet. The suppressors are the operational form of "don't ask obvious questions."
@@ -53,7 +53,7 @@ Canonical source: this directory. Installed user-scoped to `~/.claude/skills/int
 ## Handover
 
 1. Verify the install resolves: `/interview-me` should appear after `/reload-skills`.
-2. First real use: close the open questions in `../spec-phase-1.md` §9 — nine gaps, each carrying a recommended default, which is ~3 rounds at 4 per round.
+2. First real use: close the open questions in `../harness-eng/SPEC.md` §9 — ten live gaps (Q3 and Q4 are resolved), each carrying a recommended default, which is ~3 rounds at 4 per round.
 3. If `AskUserQuestion` is not used for every question, that is a bug in the skill, not a preference.
 
 ## Open Items

@@ -1,15 +1,21 @@
 # Specification: Harness Engineering — Phase 2 (Portable Kernel Extension)
 
+> ## ⛔ NOT ACTIVE — NOT A BUILD TARGET
+>
+> Deferred reference design for a scope the active harness does not have. **Do not read, cite, or draw requirements from this file when working on Phase 1** — `../SPEC.md` is complete and self-contained on its own. Nothing here is installed, implemented, or planned.
+
 **Status:** Deferred. Not being built. Kept as a reference design in case scope grows past a single IC (e.g. onboarding a team, or taking on tech-lead-shaped ambiguity ownership). Revisit only when the pain this solves is actually felt — per the doctrine's own rule against building infrastructure ahead of a hypothesis.
 
 ## 1. What this tier is for
 
-Where Phase 1 (`spec-phase-1.md`) is one engineer's ticket lifecycle, Phase 2 is about portability: taking that lifecycle and making it something you can hand to a different team, stack, or company without rewriting it — plus the meta-work of onboarding others onto it and managing session continuity across long efforts.
+Where Phase 1 (`../SPEC.md`) is one engineer's ticket lifecycle, Phase 2 is about portability: taking that lifecycle and making it something you can hand to a different team, stack, or company without rewriting it — plus the meta-work of onboarding others onto it and managing session continuity across long efforts.
 
 ## 2. Kernel vs. build analogy
 
 - **Kernel space** — generic mindset, workflows, skill definitions, config templates. Zero company/stack secrets. Portable across any team.
 - **User space** — project-specific tracker IDs, CI/test stack, coding standards, release process.
+
+**Phase 1 already implements this split**, and did so without any of the machinery below: one kernel skill installed user-level, with every repo-specific fact living in that repo's `CLAUDE.md` (`../SPEC.md` §7.1). Anything in this document would therefore be an *extension* of that split, not a replacement for it — and would have to justify itself against a solution that already works and costs nothing.
 
 ## 3. The five rules (from the source framework)
 
@@ -32,7 +38,7 @@ The original draft of this document named 13 skills across 4 layers, attributed 
 | `domain-modeling` | ✅ `domain-modeling` | matches |
 | `wayfinder` | ✅ `wayfinder` | matches |
 | `to-tickets` | ✅ `to-tickets` | matches |
-| `diagnose` | `diagnosing-bugs` | renamed; full content already pulled into `spec-phase-1.md` §5 |
+| `diagnose` | `diagnosing-bugs` | renamed; full content already pulled into `../SPEC.md` §5 |
 | `triage` | ✅ `triage` | matches |
 | `merge-harness` | no exact match — closest are `resolving-merge-conflicts` and `setup-matt-pocock-skills` | this repo's own synthesis |
 | `handoff` | ✅ `handoff` (productivity) | matches |

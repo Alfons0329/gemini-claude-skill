@@ -1,6 +1,10 @@
 # Notice
 
-Some techniques in `spec-phase-1.md` (the TDD/seams discipline in §4 and the two-axis code-review discipline in §6) are adapted from [`mattpocock/skills`](https://github.com/mattpocock/skills), used under its MIT license:
+Two upstream projects are adapted here, both under the MIT license.
+
+## `mattpocock/skills`
+
+The TDD/seams discipline in `SPEC.md` §4 and the standards/spec code-review axes in §6 are adapted from [`mattpocock/skills`](https://github.com/mattpocock/skills):
 
 ```
 MIT License
@@ -25,5 +29,35 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ```
+
+## `dietrichgebert/ponytail`
+
+The seven-rung "laziest solution first" ladder and the `ponytail:` shortcut-marker convention in `SPEC.md` §4, and the deletion axis in §6.2, are adapted from [`dietrichgebert/ponytail`](https://github.com/dietrichgebert/ponytail):
+
+```
+MIT License
+
+Copyright (c) 2026 DietrichGebert
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+```
+
+---
 
 Everything else in `productivity/harness-eng/` is original.
