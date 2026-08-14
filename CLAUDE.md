@@ -9,7 +9,6 @@ A personal collection of agent **skills** — packaged prompt/workflow definitio
 ## Layout
 
 - `interview/` — interview, algorithm, system design, and role preparation skills:
-  - `interview-me/` — interactive interviewing & spec drafting skill.
   - `leetcode-discuss/` — competitive programming mock interview / Socratic practice skill.
   - `leetcode-note/` — automated LeetCode discussion & Notion note-taking skill.
   - `leetcode-roadmap/` — batched study roadmap generator for Notion.
@@ -18,12 +17,17 @@ A personal collection of agent **skills** — packaged prompt/workflow definitio
   - `algo-quiz/` — placeholder for algorithm quiz skill.
   - `sys-design-roadmap/` — placeholder for system design roadmap skill.
 - `productivity/` — workflow & productivity skills:
+  - `writing-skills/` — the authoring standard every other skill here follows. Read it before creating or editing a `SKILL.md`.
+  - `harness-eng/` — the AI-assisted ticket pipeline (spec → impl → verify → PR → KB).
+  - `interview-me/` — interactive interviewing & spec drafting skill.
   - `notion-to-notebooklm/` — Notion recursive markdown export for NotebookLM & podcast prompts.
   - `update-notion/` — placeholder for Notion sync skill.
 - `shared/scripts/` — helper scripts invoked by skills at runtime (e.g., `notion_to_markdown.py`).
 - `temp_skill/`, `temp_leetcode/` — staging ground for skill drafts before promotion into `interview/` or `productivity/`.
 
 ## Conventions when adding or editing a skill
+
+**`productivity/writing-skills/SKILL.md` is the authoritative standard** — layout, frontmatter, invocation, and pruning. Read it before creating or editing a `SKILL.md`. The rules below are this repository's own additions.
 
 - Every `SKILL.md` starts with YAML frontmatter:
   ```yaml
