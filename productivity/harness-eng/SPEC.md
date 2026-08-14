@@ -40,7 +40,7 @@ Bug:   SPEC ──> RCA ──> IMPL ──> VERIFY ──> PR-CREATE ──> PR
 | 1b | RCA | `rca` | **bug tickets only** — root-cause + escape analysis before any fix is written (§3.3) |
 | 2 | IMPL | `impl` | TDD-disciplined, laziest-solution-first (§4) |
 | 3 | VERIFY | `verify` | two-perspective verification + failure triage (§5) |
-| 4 | PR-CREATE | `pr-create` | open the PR with a stakeholder-readable body, reconcile the tracker |
+| 4 | PR-CREATE | `pr-create` | draft `<id>-pr.md`, open the PR from it, print the tracker updates for the operator (Q6) |
 | 5 | PR-REVIEW | `pr-review` | security gate, then three-axis review (§6) |
 | 6 | UPDATE-KB | `kb-update` | feedback loop writing learnings back to `docs/` |
 
@@ -53,19 +53,21 @@ All seven are stages of **one skill**, not seven skills — see §7.1. Each runs
 Each stage runs in its **own fresh session**. The only thing that crosses the boundary is whatever got committed to git — no session inherits another's reasoning or context. This is deliberate, not incidental: it's what makes the `verify` stage's end-user pass trustworthy (§5.2) — it can't inherit `impl`'s blind spots if it never saw `impl`'s session in the first place.
 
 ```
-You (boss) → pick a ticket → run /harness-eng spec with interview grill
+You (boss) → save the ticket text to <id>-ticket.md → /harness-eng spec
                                       ↓
-                            spec.md committed to git
+                       <id>-spec.md committed to the progress repo
                                       ↓
                     new session reads spec → /harness-eng impl
                                       ↓
-                    code + qa.md + qa-e2e.md scaffold committed to git
+                  code (target repo) + <id>-qa.md + <id>-qa-e2e.md scaffold
                                       ↓
-                    new session reads spec + qa.md + scaffold → /harness-eng verify
+             new session reads spec + qa.md + scaffold → /harness-eng verify
                                       ↓
                          PASS → pr-create → pr-review → kb-update
                          FAIL → document repro, fix loop (max 2x) → escalate to boss
 ```
+
+**Two repositories, two kinds of commit.** Code lands in the target repo on a feature branch. Every artifact lands in a separate personal progress repo, one directory per ticket (Q2). Both are git, so §3.1's contract holds for each; only the code is ever seen by the team.
 
 **One stage per invocation.** Run the stage, commit, report, stop. Never continue into the next stage in the same session, even when the next stage is obvious and the context is already loaded.
 
@@ -73,17 +75,23 @@ This is the rule the whole design rests on. A session that ran `impl` cannot be 
 
 **The artifact is the whole contract.** Each session commits its output and the next session reads those files *cold* — no shared memory, no "as we discussed earlier":
 
-| Session | Produces |
-|---|---|
-| 1 — `spec` | `<ticket-id>-spec.md` (spec + acceptance criteria + evidence index + open questions) |
-| 1b — `rca` *(bug tickets only)* | `<ticket-id>-rca.md` (root cause, escape analysis, extra acceptance criteria the analysis demands — §3.3) |
-| 2 — `impl` | code changes + `<ticket-id>-qa.md` (dev test plan) + `<ticket-id>-qa-e2e.md` (bare scaffold, §4) |
-| 3 — `verify` | `qa.md` filled with `Result:` lines + `qa-e2e.md` filled in and run (§5.2) |
-| 4 — `pr-create` | PR opened with a stakeholder-readable body; tracker reconciled |
-| 5 — `pr-review` | inline review comments + `<ticket-id>-security-review.md` if security findings |
-| 6 — `kb-update` | `docs/` updated in the target repo |
+| Session | Reads | Produces |
+|---|---|---|
+| 0 — *the operator* | the tracker | `<id>-ticket.md` — pasted by hand, before any stage (Q10) |
+| 1 — `spec` | `<id>-ticket.md` | `<id>-spec.md` — numbered `Given/When/Then` acceptance criteria + evidence index + open questions (Q1) |
+| 1b — `rca` *(bug tickets only)* | `<id>-ticket.md`, `<id>-spec.md` | `<id>-rca.md` — root cause, escape analysis, extra acceptance criteria the analysis demands (§3.3) |
+| 2 — `impl` | `<id>-spec.md`, `<id>-rca.md` | code in the target repo + `<id>-qa.md` (dev test plan) + `<id>-qa-e2e.md` (bare scaffold, §4) |
+| 3 — `verify` | `<id>-spec.md`, `<id>-qa.md`, scaffold | `<id>-qa.md` with `Result:` lines + `<id>-qa-e2e.md` authored and run (§5.2) + `<id>-verify-trace.md` (Q15) |
+| 4 — `pr-create` | `<id>-spec.md`, `<id>-verify-trace.md` | `<id>-pr.md` drafted, then the PR opened from it; tracker updates printed for the operator (Q6) |
+| 5 — `pr-review` | the diff, `<id>-spec.md` | inline review comments + `<id>-security-review.md` when there are findings (§6.1) |
+| 6 — `kb-update` | `<id>-rca.md`, `<id>-verify-trace.md` | `docs/` updated in the **target** repo, on the feature branch (Q5) |
 
-Any stage invoked with `--human` also writes that text verbatim into its artifact (§7.2) — otherwise the input dies at the session boundary.
+Two artifacts sit outside this sequence because every stage touches them:
+
+- **`<id>-progress.md`** — each stage appends one or two lines, in the register of a commit message. It exists so that a week away costs one short file to read rather than five long ones (Q15).
+- **`## Human input`** — any stage invoked with `--human` writes that text verbatim into its own artifact, appended and dated (§7.2, Q11). Otherwise the input dies at the session boundary.
+
+Filenames follow `<ticket-id-lowercase>-<artifact>.md` throughout, and **stages read only the artifacts named above** — a ticket directory also collects logs, scripts, and captured bundles, and those are scratch (Q16).
 
 Because the contract is files rather than context, each stage can run in a **different session, a different model, or be picked up by a different engineer** — the artifacts carry everything needed.
 
@@ -92,21 +100,24 @@ Because the contract is files rather than context, each stage can run in a **dif
 One skill, one grammar:
 
 ```
-/harness-eng <stage> <ticket-id> [mode] [--human "<free text>"]
+/harness-eng <stage> <ticket> [mode] [--human "<free text>"]
 
 stages:  spec | rca | impl | verify | pr-create | pr-review | kb-update
 modes:   fix-qa | fix-sec          (impl only — §5.5)
 --human: optional per-invocation context, valid on every stage (§7.2)
+
+<ticket>: a bare ticket ID, searched for beneath the progress root — or,
+          when it contains "/", a path relative to that root (Q13)
 ```
 
-Invoke each stage yourself, **each in a fresh session**:
+**Before the first stage**, save the ticket text to `<id>-ticket.md` in the ticket directory (Q10). Every stage after that is invoked by you, **each in a fresh session**:
 
 ```bash
 # Session 1 — generate the spec from the ticket
 /harness-eng spec <TICKET-ID>
 
 # Optional — align on ambiguities before implementing
-/interview-me <artifact-dir>/<ticket-id>-spec.md
+/interview-me <ticket-dir>/<ticket-id>-spec.md
 
 # Session 1b — BUG TICKETS ONLY: root-cause before any fix is written (§3.3)
 /harness-eng rca <TICKET-ID>
@@ -117,7 +128,7 @@ Invoke each stage yourself, **each in a fresh session**:
 # Session 3 — verify (environment pre-flight, dev pass, then E2E pass)
 /harness-eng verify <TICKET-ID>
 
-# Session 4 — open the PR (run manually; not auto-chained)
+# Session 4 — draft the body, then open the PR (run manually; nothing chains)
 /harness-eng pr-create <TICKET-ID>
 
 # Session 5 — review the PR once it's open
@@ -140,9 +151,11 @@ Per-invocation human context, valid on any stage:
 /harness-eng spec <TICKET-ID> --human "Only reproduces on kernel 6.8.10; triage to that version only."
 ```
 
-**Artifact paths are never passed as arguments.** Each stage derives them from `<ticket-id>` and the artifact-directory convention (Q2) — one fewer thing to get wrong, and one fewer way for two stages to disagree about where a file lives.
+**Artifact paths are never passed as arguments.** Each stage resolves the ticket directory once (Q13), then derives every filename from the ticket ID (Q16) — one fewer thing to get wrong, and one fewer way for two stages to disagree about where a file lives.
 
-Stages are **not auto-chained** — you decide when each one runs. That's the point of acting as the boss: each transition is a checkpoint you can redirect at.
+**No stage triggers another.** You decide when each one runs; that is the point of acting as the boss, and each transition is a checkpoint you can redirect at. This holds for `kb-update` too — an earlier draft had `pr-review` fire it on PASS, which contradicts the one-stage-per-invocation rule and is withdrawn (Q5).
+
+**A stage that needs you either waits or exits, decided by how long you would be away** (Q7/Q9). A seam confirmation is answered in seconds, so the session waits. A manual E2E checklist takes hours or days, so the session writes down what it needs, tells you how to return the results, and stops.
 
 ### 3.3 Bug tickets — the RCA branch
 
@@ -235,7 +248,16 @@ The `impl` stage is not trusted to decide what "correct from a user's perspectiv
 - `impl` may only name *what flow* is touched (the bare scaffold, §4) — never the concrete steps or assertions.
 - `verify` runs in a session that never saw `impl`'s reasoning (§3.1) — only the committed spec, code, `qa.md`, and the scaffold. From that, it independently writes the actual clickable steps and assertions and treats the acceptance criteria in `<ticket-id>-spec.md` — plus, on a bug ticket, those added by `<ticket-id>-rca.md` (§3.3) — as the source of truth for what "correct" means, not the scaffold's suggestions and not the implementation's behavior.
 
-**If no E2E automation tooling exists in the target repo** (no Playwright/Cypress/equivalent), don't fake it or skip it silently: write the filled-in steps as a **manual checklist** for the boss to execute and confirm, and say so explicitly in the report.
+**If no E2E automation tooling exists in the target repo** (no browser-driver or equivalent), don't fake it or skip it silently: write the filled-in steps as a **manual checklist** for the boss to execute.
+
+**The session then exits rather than waiting** (Q7/Q9) — a checklist takes hours or days, and a session held open that long carries context that has gone stale against a world that moved. It names exactly how to return the results:
+
+```
+Wrote <ticket-id>-qa-e2e.md — 6 cases. Run them, then:
+  /harness-eng verify <ticket-id> --human "E2E-1..5 pass, E2E-6 fails: <what happened>"
+```
+
+The returned text lands verbatim in the artifact (§7.2), so the next session has the results in writing rather than in someone's memory.
 
 ### 5.3 Sequencing within `verify`
 
@@ -243,6 +265,8 @@ The `impl` stage is not trusted to decide what "correct from a user's perspectiv
 
 1. **Dev pass** — run `<ticket-id>-qa.md` (produced by `impl`, §4) against the local stack. Fast feedback first.
 2. **E2E pass** — only once the dev pass is green, write the real steps into `<ticket-id>-qa-e2e.md` per §5.2 and run them (or hand the manual checklist to the boss).
+
+Both passes write their evidence to `<ticket-id>-verify-trace.md` as they run — each case, the command, the output, and the acceptance criterion it maps to, plus the control case and its verdict (Q15). §5.5 asks this stage to rule between a broken environment and broken code; a ruling with no record behind it can be believed but not reviewed.
 
 If either pass fails, don't guess — classify it (§5.5) and, if it's a code bug, run the diagnosis discipline (§5.4) before forming any hypothesis.
 
@@ -412,34 +436,121 @@ Three rules make it safe:
 1. **It is written into the stage's artifact, verbatim, under a `## Human input` heading.** Sessions share nothing but committed files (§3.1), so input that stays in the session evaporates before the next stage runs. Without this rule the flag would create exactly the invisible cross-session state the artifact contract exists to prevent.
 2. **It outranks inference, but never silently.** Where it contradicts `CLAUDE.md` or the spec, the stage says so and asks which wins rather than quietly deviating. The resolution is recorded next to the input.
 3. **Repetition means it belongs in `CLAUDE.md`.** The same `--human` text passed on a third ticket was never per-invocation context — it is a repo fact being re-typed. Same test as §3 stage 6 applies to learnings: transient goes on the command line, durable goes into user space.
+4. **On a repair invocation it appends, dated — it never replaces** (Q11). What an instruction *used to be* is often the only thing that explains why the code looks the way it does. A later entry may countermand an earlier one in words; it never deletes it from the record.
 
 ## 8. Handover Checklist
 
-**Applies to everything below:** kernel only (§7.1) — no company facts, no hardcoded conventions, and an explicit fallback for when the target repo's `CLAUDE.md` documents nothing. One skill, installed user-level to `~/.claude/skills/harness-eng/`.
+**Applies to everything below:** kernel only (§7.1) — no company facts, no hardcoded conventions, and an explicit fallback for when the target repo's `CLAUDE.md` documents nothing. One skill, installed user-level to `~/.claude/skills/harness-eng/`. Follow `../writing-skills/SKILL.md`, the house authoring standard, throughout.
 
-- [ ] Write `SKILL.md` — frontmatter (`name`, `description`, `allowed-tools`), the stage dispatch table, argument grammar including `[mode]` and `--human` (§3.2), the one-stage-per-invocation rule (§3.1), the artifact contract (§3.1), the `CLAUDE.md` read and its fallback (§7.1), `--human` handling (§7.2), and escalation (§5.6). **Contains no stage-specific procedure** — those live in `reference/`.
-- [ ] Write `reference/spec-create.md` — delegates to `interview-me` for the interview mechanics; produces the spec, numbered acceptance criteria, and the evidence index (Q1).
-- [ ] Write `reference/ticket-rca.md` implementing §3.3 — no-op on non-bug tickets, the three-part output in its fixed order, the *Fix verification tied to this RCA* section, and the stop-and-report gate when the spec's root-cause claim fails verification against the code.
-- [ ] Write `reference/ticket-impl.md` implementing §4 — the ladder first, then the TDD discipline, the `ponytail:` shortcut marker, both QA artifacts (`-qa.md` with checkable `## Test Environment` preconditions, a named control case, and an empty `## Correction log`; plus the `-qa-e2e.md` scaffold), and the `fix-qa` / `fix-sec` repair modes.
-- [ ] Write `reference/ticket-verify.md` implementing: the §5.5 environment pre-flight and its control-case discriminator, independent E2E authorship (§5.2), dev-pass-then-e2e-pass sequencing and the documented-skip escape hatch (§5.3), six-phase diagnosis (§5.4), the four-way failure triage and `## Correction log` ownership (§5.5), and both retry budgets — zero for environment, two for a code bug (§5.6).
-- [ ] Write `reference/pr-lifecycle.md` with `pr-create` unchanged, and `pr-review` implementing the §6.1 security gate (blocking, writes `-security-review.md`, repairs via `fix-sec`) followed by §6.2's three-axis parallel-subagent review.
-- [ ] Write `reference/kb-update.md` — Q5, including the proper-noun graduation test and harvesting `ponytail:` markers into the ledger.
+**Rules that bind every file below**, resolved in §9 and not restated per item: filenames are `<ticket-id-lowercase>-<artifact>.md` and only the named artifacts are ever read (Q16); a missing or malformed input fails fast naming the artifact, the path searched, and the command that produces it (Q8); a stage waits only for an answer given in seconds and otherwise exits with instructions for returning results (Q7/Q9); every stage appends one or two lines to `<id>-progress.md` (Q15); no stage triggers another (§3.1).
+
+- [ ] Write `SKILL.md` — frontmatter (`name`, `description`, `disable-model-invocation: true` per Q14), the stage dispatch table, argument grammar including `[mode]` and `--human` (§3.2), ticket-directory resolution by search with the `/`-means-path override (Q13), the one-stage-per-invocation rule (§3.1), the artifact contract and filename convention (§3.1, Q16), the `CLAUDE.md` read and its fallback (§7.1), `--human` handling including dated append (§7.2), the wait-or-exit rule (Q7/Q9), and escalation (§5.6). **Contains no stage-specific procedure** — those live in `reference/`.
+- [ ] Write `reference/spec-create.md` — reads `<id>-ticket.md` and fails fast if absent (Q10); delegates to `interview-me` for the interview mechanics; produces numbered `Given/When/Then` acceptance criteria and the evidence index (Q1). Reads a parent epic AC tracker for context if one is present (Q17).
+- [ ] Write `reference/ticket-rca.md` implementing §3.3 — no-op on non-bug tickets, the three-part output in its fixed order, the *Fix verification tied to this RCA* section, and the stop-and-report gate when the spec's root-cause claim fails verification against the code (Q10).
+- [ ] Write `reference/ticket-impl.md` implementing §4 — the ladder first, then the TDD discipline, the `ponytail:` shortcut marker, both QA artifacts (`-qa.md` with checkable `## Test Environment` preconditions, a named control case, and an empty `## Correction log`; plus the `-qa-e2e.md` scaffold), the seam confirmation as the one blocking checkpoint (Q7), and the `fix-qa` / `fix-sec` repair modes.
+- [ ] Write `reference/ticket-verify.md` implementing: the §5.5 environment pre-flight, its control-case discriminator and the first-ticket fallback with its *pre-flight unavailable* announcement (Q12), independent E2E authorship (§5.2), dev-pass-then-e2e-pass sequencing and the documented-skip escape hatch (§5.3), six-phase diagnosis (§5.4), the four-way failure triage and `## Correction log` ownership (§5.5), `<id>-verify-trace.md` as the evidence record (Q15), the exit-and-be-re-invoked handoff on the manual checklist path (Q9), and both retry budgets — zero for environment, two for a code bug (§5.6).
+- [ ] Write `reference/pr-lifecycle.md` with `pr-create` drafting `<id>-pr.md` (TL;DR, what changed, why, acceptance criteria pasted verbatim, how verified, deliberately skipped) then opening the PR from it and printing tracker updates rather than performing them (Q6), plus the one coarse line appended to a parent epic tracker when one exists (Q17); and `pr-review` implementing the §6.1 security gate (blocking, writes `-security-review.md`, repairs via `fix-sec`) followed by §6.2's three-axis parallel-subagent review.
+- [ ] Write `reference/kb-update.md` — Q5: scope picks `docs/shared/` or `docs/project/<slug>/` in the **target** repo, written on the feature branch so it reaches the team through PR review; the proper-noun graduation test routing method improvements out to the kernel instead; and harvesting `ponytail:` markers into a ledger under `docs/shared/`.
 - [ ] Update `NOTICE.md` crediting `mattpocock/skills` (MIT) for §4 and §6, and `dietrichgebert/ponytail` (MIT) for the ladder in §4 and the deletion axis in §6.2.
 
 ## 9. Open Questions
 
-**Close these before writing `SKILL.md`.** Each carries a recommended default; resolving one means confirming or overriding it, then folding the answer into the section named. Resolved items keep their number rather than being deleted — other documents cite them.
+**All closed.** Every question below is resolved and folded into the sections it affects; nothing here blocks writing `SKILL.md`. Resolved items keep their number rather than being deleted — other documents cite them, and the reasoning behind a decision is worth more than the decision alone when someone later wants to change it.
+
+Q15, Q16 and Q17 were opened *during* the closing pass, from evidence about how the pipeline is actually run: two artifact types in daily use that this document had never named, a filename convention it had left implicit, and a parent-epic level it did not know existed.
 
 ### Blocking — a skill cannot be written without these
 
-**Q1 — What is the spec template, and what shape is an acceptance criterion?** (§3 stage 1, §8 item 1)
-`spec` is the only stage with no written spec, yet three later stages depend on its output shape: `qa.md` is one case per AC (§4), `verify` treats AC as the source of truth for "correct" (§5.2), and `pr-review`'s spec axis quotes spec lines (§6.2). Undefined AC format means the pipeline's central contract is undefined. Also unresolved: where ticket text comes from (tracker API / pasted text / URL), and what "open questions" means operationally in a generated spec.
-*Recommended default:* AC as numbered, individually testable `Given/When/Then` statements — numbered so `qa.md` cases, `pr-review` findings, and the RCA's *Fix verification* section (§3.3) can cite `AC-3` unambiguously, with E2E cases numbered in their own series (`E2E-5`). Add a second required section, an **evidence index** mapping each load-bearing claim to a `file:line` or commit SHA — `rca` traces from it (§3.3) and cannot verify a root-cause claim without it.
+**Q1 — What is the spec template, and what shape is an acceptance criterion?** ~~(§3 stage 1, §8 item 1)~~ — **RESOLVED.**
+An acceptance criterion is a **numbered `Given/When/Then` statement**, individually testable. Numbering is what lets `qa.md` cases, `pr-review` findings, and the RCA's *Fix verification* section (§3.3) cite `AC-3` unambiguously; E2E cases are numbered in their own series (`E2E-5`).
 
-**Q2 — Where do ticket artifacts live?** (§3.1, §3.2)
-§3.1 makes "committed to git" the contract but never says which repo or path. If artifacts live in the target repo they appear in the PR diff; if they live elsewhere, "committed" needs redefining.
-*Recommended default:* a per-ticket directory inside the target repo (e.g. `.harness/<ticket-id>/`), committed on the feature branch — it travels with the code, and reviewers can see the spec and QA plan alongside the diff.
-**Priority raised by §3.2:** paths are now derived from `<ticket-id>` rather than passed as arguments, so every stage depends on this convention. It is no longer a filing preference — it is how the stages find each other's work.
+The spec carries a second required section, an **evidence index**, mapping each load-bearing claim to a `file:line` or commit SHA. `rca` traces from it (§3.3) and cannot verify a root-cause claim without one — without the index it re-derives every claim's provenance and cannot distinguish a verified claim from a guessed one.
+
+```markdown
+## Acceptance criteria
+AC-1  Given <precondition>
+      When <action>
+      Then <observable outcome>
+
+## Evidence
+AC-1                        <path>:<line>
+claim: "<load-bearing claim>"  <path>:<line>
+```
+
+Ticket text as an input is resolved by Q10. *(Number retained — other documents cite "Q1".)*
+
+**Q2 — Where do ticket artifacts live?** ~~(§3.1, §3.2)~~ — **RESOLVED.**
+Artifacts live in a **separate personal progress repository**, outside every target repo, with one directory per ticket ID. It is a real git repository, so §3.1's "committed to git" contract holds unchanged.
+
+```
+~/<progress-root>/
+├── <grouping>/            # optional — epic, team, whatever you like
+│   └── <ticket-id>/
+│       ├── ticket.md
+│       ├── spec.md
+│       ├── qa.md
+│       └── ...
+```
+
+**Resolution of the progress root is a machine-personal fact**, not a repo fact: it is recorded in the *user-level* context file (`~/.claude/CLAUDE.md` or the harness's equivalent), never in a target repo's `CLAUDE.md`. A target repo's context file is shared with the team, and a personal notes path does not belong in it. This is the one fact that lives at neither of §7.1's two layers — it is true of the machine, across every repo on it.
+
+**Finding a ticket's directory** is resolved by Q13, since intermediate grouping means the path is not derivable from the ticket ID alone.
+
+Three alternatives were rejected:
+
+| Rejected | Why |
+|---|---|
+| `.harness/<id>/` committed in the target repo | Puts personal working notes in shared source — a change a teammate is right to object to. Also disappears on `git checkout main`, and a ticket spanning two repos has no single home. |
+| `.harness/<id>/` gitignored in the target repo | Never committed, so it has no history at all — this abandons §3.1's contract outright while buying no privacy the separate repo does not already give. |
+| Epic passed as part of the ticket argument | Makes every invocation longer and requires the human to remember which grouping a ticket sits under; a cold session cannot remind them. |
+
+Two consequences carried elsewhere:
+
+1. **Reviewers no longer see the spec beside the diff.** `pr-create` must therefore *paste* the acceptance criteria into the PR body as text rather than link to a file no reviewer can open (Q6).
+2. **The progress repository accumulates real ticket IDs, service names, and root-cause writeups.** It stays local-only or on a private remote. A public remote on it would undo, in one push, the separation this whole document is built to preserve. Its `README.md` says so on line one.
+
+A note on what this does *not* buy: on a company-issued machine the artifacts are still on company hardware and company backups. The separation is from company *git* — no PR noise, no permission conversation, and the history leaves with you. It is not secrecy, and should not be planned as if it were. *(Number retained — other documents cite "Q2".)*
+
+**Q13 — How does a cold session find a ticket's artifact directory?** ~~(§3.2, Q2)~~ — **RESOLVED.**
+Search for a directory named `<ticket-id>` anywhere beneath the progress root. Grouping under that root is free-form and is expected to vary — by epic, by year, by team, by whatever made sense at the time — so no fixed depth or naming scheme may be assumed.
+
+| Hits | Behaviour |
+|---|---|
+| exactly 1 | use it |
+| 0 | create `<root>/<ticket-id>/` and say where |
+| 2 or more | stop, list every match, ask which |
+
+**The human is the fallback, and pointing is a first-class input rather than an error path.** When the search does not land, the operator names the directory; the session never guesses between candidates and never invents a second home for a ticket that already has one.
+
+**Mechanism: a `<ticket-id>` argument containing `/` is a path, not an identifier**, resolved relative to the progress root. This makes pointing a normal invocation rather than an interactive repair, and it carries no state between sessions:
+
+```bash
+/harness-eng verify eng-1                    # search
+/harness-eng verify <grouping>/<...>/eng-1   # pointed
+```
+
+The ticket ID for artifact-naming purposes is the last path segment, so a pointed invocation and a searched one produce identical filenames. *(Number retained — other documents cite "Q13".)*
+
+**Q16 — What are artifacts named?** — **RESOLVED.** `<ticket-id-lowercase>-<artifact>.md`, one spelling per artifact, throughout.
+
+| Artifact | Filename | Written by |
+|---|---|---|
+| ticket text | `<id>-ticket.md` | the operator, before any stage (Q10) |
+| spec | `<id>-spec.md` | `spec` |
+| root cause | `<id>-rca.md` | `rca` — bug tickets only |
+| dev QA plan | `<id>-qa.md` | `impl` |
+| end-user QA plan | `<id>-qa-e2e.md` | `verify` (§5.2) |
+| verification evidence | `<id>-verify-trace.md` | `verify` (Q15) |
+| PR body draft | `<id>-pr.md` | `pr-create` (Q6) |
+| security findings | `<id>-security-review.md` | `pr-review` (§6.1) |
+| resume point | `<id>-progress.md` | every stage, append-only (Q15) |
+
+**The ticket-ID prefix is load-bearing**, not decoration: a dozen of these are open in an editor at once, and `spec.md` twelve times over is unreadable. **Lowercase throughout** — mixed case on the same ticket's files is a real cost paid every time you type a path or sort a directory.
+
+**Stages read only the artifacts named above.** A ticket directory also accumulates working material — logs, scripts, captured bundles, build detritus — and a cold session that wanders into a stale log bundle draws conclusions from evidence belonging to a different run. The named set is the contract; everything else in the directory is scratch, and invisible to the pipeline.
+
+**Q14 — Is `harness-eng` user-invoked or model-invoked?** — **RESOLVED.**
+**User-invoked** (`disable-model-invocation: true` in Claude Code; the equivalent flag on other harnesses). This is the house default set by `../writing-skills/SKILL.md` Phase 3, and it is the right one here for a specific reason: the stages commit work and open pull requests, and §3.1 forbids chaining stages inside one session. An agent able to fire a stage autonomously is an agent able to cross the session boundary that makes `verify`'s end-user pass trustworthy. The frontmatter `description` is therefore human-facing — a one-line summary for a slash-command list, with trigger phrasing stripped, since nothing matches against it.
 
 **Q3 — Where do skills read project conventions from?** ~~(§4)~~ — **RESOLVED, see §7.1.**
 Skills are kernel-only and installed user-level; every company- and repo-specific fact lives in that repo's `CLAUDE.md`, which is loaded automatically at session start. No per-repo skill copies. Each stage must name a fallback for when `CLAUDE.md` documents nothing. *(Number retained — other documents cite "Q3".)*
@@ -449,30 +560,151 @@ The single grammar answers it: `/harness-eng <stage> <ticket-id> [mode] [--human
 
 ### Would produce a vague skill if left open
 
-**Q5 — What does `kb-update` actually write?** (§3 stage 6, §8)
-No spec exists: what counts as a learning worth recording, where under `docs/` it lands, and how it avoids re-stating what the repo already documents. Also an inconsistency — §3.2 says it is auto-triggered by `pr-review` on PASS, but §6 never mentions triggering it.
-*Recommended default:* append-only entries under `docs/learnings/`, one file per ticket, and record only what was *non-obvious* — a wrong assumption corrected, a convention discovered, a trap for the next engineer. Never restate what the diff already shows. On bug tickets this stops being improvisation: the RCA's *What would have caught it* list (§3.3) is already exactly this, sourced, and is the stage's primary input.
-A learning has two possible destinations, decided by one test — **strip every proper noun from it.** Something survives → it is a method improvement, and belongs in the kernel skill itself. Nothing survives → it is a repo fact, and belongs in that repo's `CLAUDE.md` (§7.1). Mixing the two is how a portable kernel silently acquires one employer's conventions.
-This stage also harvests `ponytail:` markers (§4) into a debt ledger, so deliberate shortcuts stay visible instead of rotting into "later means never." Whether the ledger is one file per repo or one section per ticket is part of this question.
+**Q5 — What does `kb-update` actually write?** ~~(§3 stage 6, §8)~~ — **RESOLVED.**
 
-**Q10 — Where does the RCA get the ticket text, and is `rca` blocking?** (§3.3)
-The implementation this reconstructs fetched the ticket from a tracker for primary-source quotes; this document keeps tracker binding out deliberately (Q6). Passing ticket text as an argument keeps it portable, but loses the reporter's comments — where earlier triage attempts often live. Separately: §3.3 says the RCA gates IMPL, which makes it the second human checkpoint inside an otherwise autonomous run (cf. Q7).
-*Recommended default:* ticket text is an input, resolved the same way Q1 resolves it for `spec` — one unresolved source, not two. Blocking on a failed root-cause verification only; otherwise it writes the doc and exits.
+**The knowledge base lives in the target repo's `docs/` tree, not in the progress repo.** This is the deliberate counterpart to Q2, not a contradiction of it: personal working artifacts stay out of company git, and durable documentation the team needs belongs in it. The two are different things with different audiences, and conflating them is what makes each one worse.
 
-**Q6 — What goes in the PR body, and what does "reconcile the tracker" mean?** (§3 stage 4)
-§5.3 requires a skipped VERIFY to state its reason *in the PR body*, so body structure is load-bearing. "Reconcile the tracker" is also the least portable instruction here — it is the one place a company-specific binding would otherwise have to live, and this document deliberately has no mechanism for that (§7.1).
-*Recommended default:* a fixed body template (what changed / why / how it was verified / anything deliberately skipped, with reason), and tracker reconciliation stated as an explicit manual step rather than automated — naming the gap honestly instead of pretending it is generic.
+```
+<repo>/docs/
+├── README.md                     # orients a reader arriving cold
+├── shared/                       # repo-wide, project-agnostic
+│   ├── architecture-<topic>.md
+│   ├── ops-<topic>.md
+│   └── repo-orientation.md
+├── project/<project-slug>/       # scoped to one project or epic
+│   ├── README.md
+│   └── design-<phase>.md
+└── <initiative-slug>/            # a standalone effort with its own life
+```
 
-**Q11 — On a repair invocation, does `--human` append or replace?** (§7.2)
-`/harness-eng impl <id> fix-qa --human "..."` runs against an artifact that may already carry a `## Human input` section from the original invocation.
-*Recommended default:* append, dated. Same argument as §5.5's `## Correction log` — seeing what an instruction used to be is the point, and a silent overwrite destroys the audit trail.
+**Scope picks the directory.** True of the whole repository regardless of what you are working on → `docs/shared/`. True of one project or epic → `docs/project/<slug>/`. Every directory carries a `README.md` that orients someone arriving cold; a directory of documents with no entry point is a pile, not a knowledge base.
 
-**Q12 — What serves as the control case on the first ticket in a repo?** (§5.5)
-The environment pre-flight needs a pre-existing case, and on ticket one there isn't one.
-*Recommended default:* fall back to the repo's own test suite as documented in `CLAUDE.md` — if it is already red before the change, the environment is implicated. If the repo has no suite either, say so explicitly and treat the pre-flight as unavailable rather than silently skipping it.
+**Written on the feature branch**, so it reaches the team through the same PR review as the code. No silent writes into shared documentation, and no separate approval path to remember.
 
-### Ambiguities — one sentence each will do
+**Record only what was non-obvious** — a wrong assumption corrected, a convention discovered, a trap laid for the next engineer. Never restate what the diff already shows. On bug tickets this stops being improvisation: the RCA's *What would have caught it* list (§3.3) is already exactly this material, already sourced, and is the stage's primary input.
 
-**Q7 — Is `impl` interactive?** §4 says seams are "confirmed with the user," which is the only human checkpoint inside an otherwise autonomous stage. Is that deliberate, and does the session block on it?
-**Q8 — What happens when an input artifact is missing or malformed?** A cold `verify` invoked before impl committed needs a defined fail-fast behavior rather than improvising.
-**Q9 — How does the manual-checklist path hand off?** (§5.2) When no E2E tooling exists, the boss executes the checklist — does the session block and wait for results, or exit and get re-invoked with them?
+**A third destination sits outside every repo.** Apply the graduation test — **strip every proper noun.** Something survives → it is a method improvement and belongs in the kernel skill itself, which no repo owns. Nothing survives → it is documentation, and lands in `docs/` per the scope rule above. Mixing the two is how a portable kernel silently acquires one employer's conventions.
+
+This stage also harvests `ponytail:` markers (§4) into a debt ledger under `docs/shared/`, so deliberate shortcuts stay visible to the team instead of rotting into "later means never."
+
+**Triggering:** §3.2's claim that `pr-review` auto-triggers this stage is withdrawn — it contradicts the one-stage-per-invocation rule (§3.1). `kb-update` is invoked like every other stage. *(Number retained — other documents cite "Q5".)*
+
+**Q10 — Where does the RCA get the ticket text, and is `rca` blocking?** ~~(§3.3)~~ — **RESOLVED.**
+The operator saves the ticket text to `<ticket-dir>/ticket.md` before running any stage. `spec` and `rca` both read that one file — one source, archived beside the artifacts it produced, and readable with no network. A missing `ticket.md` is a fail-fast (Q8), not an improvisation:
+
+> `No ticket.md for <ticket-id>. Save the ticket text to <resolved-path>/ticket.md and re-run.`
+
+**No tracker binding, in either direction.** A fetch-command-from-`CLAUDE.md` variant was rejected: it adds a second code path to the most-run stage in exchange for a capability that depends on company CLI access, and it puts a tracker-shaped hole in the kernel where §7.1 says none should exist. The cost is accepted honestly — pasting loses whatever lives in tracker comments, and the operator is free to paste those into `ticket.md` too.
+
+**`rca` blocks only on a failed root-cause verification.** Where the spec's root-cause claim does not survive checking against the code, the stage stops and reports rather than writing an RCA built on a claim it just disproved. Otherwise it writes the document and exits, and IMPL reads it cold. *(Number retained — other documents cite "Q10".)*
+
+**Q15 — Are `progress` and `verify-trace` artifacts part of the pipeline?** — **RESOLVED.** Both, and neither is a new stage.
+
+**`<ticket-id>-progress.md` is a resume point, not a journal.** One or two lines per stage run, written in the register of a commit message: what was done, what state the ticket is now in. Its whole purpose is that after a week away you recover the thread from one short file instead of reconstructing it from five long ones. Length is the feature — a progress file that grows into prose has stopped doing the job it exists for.
+
+```markdown
+2026-08-14  spec    6 ACs, 2 open questions
+2026-08-14  impl    done; mocked at <interface>
+2026-08-15  verify  AC-4 red, code bug -> fix-qa
+```
+
+**`<ticket-id>-verify-trace.md` is `verify`'s evidence.** Each case, the command run, the output seen, and which AC it maps to — including the control case and its verdict (§5.5). Without it a triage decision is a claim; with it the decision is checkable by someone who was not there. §5.5 asks a session to rule between environment and code, and a ruling with no record behind it cannot be reviewed, only believed.
+
+Both are naming conventions applied by stages that already exist: every stage appends to `progress`, and `verify` alone writes the trace.
+
+**Q17 — What may a stage do with a parent epic's AC tracker?** — **RESOLVED.** Read it for context; append exactly one coarse line when the ticket finishes; never create it.
+
+**The parent level is told whether a child is done, and nothing else.** An epic tracks business-unit progress, not engineering detail — it wants *this sub-ticket is complete*, not a per-AC breakdown. Pushing AC-level state upward recreates the child's own artifacts one level up, where they go stale the moment the child moves.
+
+```markdown
+<child-ticket-id>  done
+<child-ticket-id>  blocked: <one line>
+```
+
+Three properties keep this safe:
+
+- **Append-only, one line, at ticket end.** Two tickets in flight can never contend for the same line.
+- **Never created.** No tracker file present → nothing is written and nothing is said. The tracker is opt-in, made by hand when an epic is worth tracking.
+- **Read is unconditional, write is terminal.** Any stage may read the tracker to learn what the epic covers; only the final stage writes, and only that one line.
+
+**Why not full ignorance.** A tracker sitting one directory up is context already on disk, and a session blind to it re-derives from `--human` what it could have read for free. Why not a live rollup: that is cross-ticket orchestration, which §1 defers, and it is how a parent file becomes a second source of truth about a child's state.
+
+**Q6 — What goes in the PR body, and what does "reconcile the tracker" mean?** ~~(§3 stage 4)~~ — **RESOLVED.**
+
+`pr-create` **drafts the body to `<ticket-id>-pr.md` before opening anything**, so the body is read while it is still cheap to change. The file stays in the ticket directory afterward as the record of what was claimed.
+
+```markdown
+## TL;DR
+<one to three lines — a reviewer decides here whether to read on>
+
+## What changed
+## Why
+## Acceptance criteria
+AC-1  Given … When … Then …            [verified]
+AC-2  …                                [skipped: <reason>]
+
+## How it was verified
+## Deliberately skipped
+```
+
+**Acceptance criteria are pasted verbatim, not summarised.** Q2 put the spec in a repository no reviewer can open, so the PR body is now the only place the intended behaviour appears. A summary would also break §6.2's spec axis, which quotes spec lines a reviewer must be able to check. §5.3's requirement — a skipped `verify` states its reason in the PR body — is carried by the `Deliberately skipped` section.
+
+**The stage never touches the tracker.** It prints the updates the operator should make and stops:
+
+```
+Tracker updates for you:
+  [ ] move <ticket-id> to In Review
+  [ ] link this PR on the ticket
+```
+
+Automating this needs a tracker command from `CLAUDE.md`, which is the same tracker-shaped hole in the kernel that Q10 rejected, in the same document that says no such hole exists (§7.1). Naming the manual step honestly costs two lines of output and keeps the kernel true. *(Number retained — other documents cite "Q6".)*
+
+**Q11 — On a repair invocation, does `--human` append or replace?** ~~(§7.2)~~ — **RESOLVED.**
+**Append, dated.** Same argument as §5.5's `## Correction log`: what an instruction *used to be* is often the only thing that explains why the code looks the way it does, and a silent overwrite destroys that trail. A later entry may countermand an earlier one in words; it never deletes it from the record.
+
+```markdown
+## Human input
+2026-08-14  Only reproduces on <version>; triage to that version only.
+2026-08-15  Ignore the above — also reproduces on <other>. Widen the triage.
+```
+
+*(Number retained — other documents cite "Q11".)*
+
+**Q12 — What serves as the control case on the first ticket in a repo?** ~~(§5.5)~~ — **RESOLVED.**
+Fall back to the repo's own test suite, run with whatever command `CLAUDE.md` names, on a selection untouched by the change. Already red before the change → the environment is implicated and the pre-flight has done its job. Green → the environment is sound and triage proceeds.
+
+Where `CLAUDE.md` documents no test command at all, the pre-flight is **unavailable**, and the stage says so in the artifact rather than skipping quietly:
+
+> `Pre-flight unavailable: no test command documented in CLAUDE.md. The triage below is unverified.`
+
+That sentence is the whole point of the fallback. A silent skip produces triage that *looks* the same as verified triage; a stated one tells the reader exactly how much weight the conclusion carries.
+
+Two alternatives were rejected: asking the operator to confirm the environment is a claim the session cannot check, and authoring a throwaway trivial test proves only that the test runner starts — not that the database, the network, or the fixtures the real cases need are up. *(Number retained — other documents cite "Q12".)*
+
+### Ambiguities — resolved
+
+**Q7 + Q9 — When a stage needs the operator, does the session wait or exit?** ~~(§4, §5.2)~~ — **RESOLVED.** These were one question wearing two names.
+
+**The split is by how long the operator is away, not by which stage is running.**
+
+| Wait | Exit and get re-invoked |
+|---|---|
+| Answerable in seconds without leaving the keyboard | Requires leaving: running a manual checklist, waiting on an environment, asking another team |
+| e.g. `impl` confirming a seam (§4) | e.g. `verify`'s manual E2E path when no tooling exists (§5.2) |
+
+So `impl` **is** interactive, deliberately, at exactly one point: the seam confirmation. That checkpoint is cheap and in-flow, and paying a whole extra session for it would be worse than the interruption.
+
+A stage that exits writes down precisely what it needs and how to return it, then stops. Results come back through `--human` on the next invocation, which §7.2 already files into the artifact verbatim:
+
+```
+Wrote <ticket-id>-qa-e2e.md — 6 cases. Run them, then:
+  /harness-eng verify <ticket-id> --human "E2E-1..5 pass, E2E-6 fails: <what happened>"
+```
+
+**Why not one blanket rule.** *Always block* leaves a session open overnight with its context going stale against a world that moved. *Never block* charges a full cold session for a ten-second question. The cost that matters is the operator's attention, and it is not uniform across the two cases.
+
+**Q8 — What happens when an input artifact is missing or malformed?** — **RESOLVED.** Fail fast, and say three things: which artifact is missing, the exact path it was looked for at, and the command that produces it. Never improvise a substitute, never proceed on a partial read. Same shape as Q10's `ticket.md` message:
+
+> `No <ticket-id>-spec.md at <resolved-path>. Run /harness-eng spec <ticket-id> first.`
+
+*(Numbers retained — other documents cite "Q7", "Q8", "Q9".)*
