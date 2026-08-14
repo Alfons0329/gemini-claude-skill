@@ -93,6 +93,17 @@ Two artifacts sit outside this sequence because every stage touches them:
 
 Filenames follow `<ticket-id-lowercase>-<artifact>.md` throughout, and **stages read only the artifacts named above** — a ticket directory also collects logs, scripts, and captured bundles, and those are scratch (Q16).
 
+**Only four artifacts drive the loop.** The distinction is load-bearing, because every file a stage reads is context spent before it has done any work:
+
+| | Artifacts | Read by a later stage |
+|---|---|---|
+| **Drivers** | `-spec.md`, `-rca.md`, `-qa.md`, `-qa-e2e.md` | yes — they are the contract |
+| **Records** | `-progress.md`, `-verify-trace.md`, `-pr.md`, `-security-review.md` | no — written once, read by a human |
+
+**A record is never loaded as pipeline input.** `verify-trace.md` exists so a human can audit a triage ruling months later; nothing downstream reads it, and a stage that pulled it in would be spending a large file's worth of context to learn what `qa.md`'s `Result:` lines already say. The same holds for `progress.md`, which is read by *you* returning from a week off, not by the next session.
+
+**Records stay short by construction.** `progress.md` is one or two lines per stage. Any record that grows into prose has stopped being a record and started being a second, unreliable copy of a driver.
+
 Because the contract is files rather than context, each stage can run in a **different session, a different model, or be picked up by a different engineer** — the artifacts carry everything needed.
 
 ### 3.2 Running the pipeline
@@ -350,7 +361,18 @@ Both cap far below "keep trying," for opposite reasons: retrying a broken enviro
 
 ### 6.1 Security gate (runs first)
 
-Before the three axes below, scan the same diff for security defects only — injection, authn/authz gaps, credential or PII exposure in logs and errors, unsafe deserialization, missing input validation at trust boundaries. Keep it narrow: this is not a code-quality pass, and quality findings belong to §6.2.
+Before the three axes below, scan the same diff for security defects only. **The frame is the current OWASP Top 10** — the industry's shared vocabulary for this, which means a finding lands in a category any reviewer at any company already recognises, with no house glossary to teach.
+
+**The list itself is deliberately not transcribed here.** OWASP re-ranks and renumbers between editions, and a copy pinned into the kernel goes stale in the one way that never announces itself: nothing breaks, the scan simply keeps checking a previous decade's categories. Naming the source and reading it at review time keeps the kernel current for free — the same reason §7.1 refuses to hardcode a repo's test command.
+
+Two categories are called out because they are what an **agent-written** diff gets wrong specifically, and both are easy to read past:
+
+- **New or outdated dependencies.** An agent reaches for a library rather than the ten lines that would have done. §4's ladder catches most of this at rung 5, but any dependency that does survive into the diff is reviewed here — what it is, why it is needed, and whether it is currently maintained.
+- **Server-side request forgery.** A URL that arrives from user input and gets fetched server-side. This appears whenever an agent wires up "fetch this and show it," which it does readily and without alarm.
+
+**Where no current OWASP reference is reachable**, this floor still applies and the scan says it ran degraded: injection, authn/authz gaps, credential or PII exposure in logs and errors, unsafe deserialization, missing input validation at trust boundaries, plus the two categories above.
+
+**Keep it narrow.** This is not a code-quality pass; quality findings belong to §6.2. A gate that drifts into style stops being a gate, because a blocking finding that is really a preference teaches everyone to route around the block.
 
 A finding here **blocks the PR** and writes `<ticket-id>-security-review.md`. It is the one review finding with a named repair loop back into implementation: `/harness-eng impl <id> fix-sec`. Everything else in §6.2 is addressed by editing and re-pushing, not by re-entering a repair mode (§5.5).
 
@@ -611,6 +633,8 @@ The operator saves the ticket text to `<ticket-dir>/ticket.md` before running an
 **`<ticket-id>-verify-trace.md` is `verify`'s evidence.** Each case, the command run, the output seen, and which AC it maps to — including the control case and its verdict (§5.5). Without it a triage decision is a claim; with it the decision is checkable by someone who was not there. §5.5 asks a session to rule between environment and code, and a ruling with no record behind it cannot be reviewed, only believed.
 
 Both are naming conventions applied by stages that already exist: every stage appends to `progress`, and `verify` alone writes the trace.
+
+**Both are records, not drivers, and no stage ever reads them as input** (§3.1). Only `-spec.md`, `-rca.md`, `-qa.md` and `-qa-e2e.md` drive the loop. This is a context budget, not a filing preference: every file a stage opens is spent before it has begun the work, and a trace file is exactly the kind of long, detailed, superseded material that looks useful to load and is not. A record earns its place by being *writable cheaply and readable by a human on demand* — never by being in the path of the next stage.
 
 **Q17 — What may a stage do with a parent epic's AC tracker?** — **RESOLVED.** Read it for context; append exactly one coarse line when the ticket finishes; never create it.
 
