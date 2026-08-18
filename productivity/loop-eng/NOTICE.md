@@ -4,7 +4,7 @@ Two upstream projects are adapted here, both under the MIT license.
 
 ## `mattpocock/skills`
 
-The TDD/seams discipline in `SPEC.md` §4 and the standards/spec code-review axes in §6 are adapted from [`mattpocock/skills`](https://github.com/mattpocock/skills):
+The TDD/seams discipline in `SPEC.md` §4 (implemented in `reference/ticket-impl.md`) and the standards/spec code-review axes in `SPEC.md` §6 (implemented in `reference/pr-lifecycle.md`) are adapted from [`mattpocock/skills`](https://github.com/mattpocock/skills):
 
 ```
 MIT License
@@ -32,7 +32,7 @@ SOFTWARE.
 
 ## `dietrichgebert/ponytail`
 
-The seven-rung "laziest solution first" ladder and the `ponytail:` shortcut-marker convention in `SPEC.md` §4, and the deletion axis in §6.2, are adapted from [`dietrichgebert/ponytail`](https://github.com/dietrichgebert/ponytail):
+The seven-rung "laziest solution first" ladder and the `ponytail:` shortcut-marker convention in `SPEC.md` §4 (implemented in `reference/ticket-impl.md`), and the deletion axis in §6.2 (implemented in `reference/pr-lifecycle.md`), are adapted from [`dietrichgebert/ponytail`](https://github.com/dietrichgebert/ponytail):
 
 ```
 MIT License
