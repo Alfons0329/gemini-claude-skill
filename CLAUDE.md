@@ -18,7 +18,7 @@ A personal collection of agent **skills** — packaged prompt/workflow definitio
   - `sys-design-roadmap/` — placeholder for system design roadmap skill.
 - `productivity/` — workflow & productivity skills:
   - `writing-skills/` — the authoring standard every other skill here follows. Read it before creating or editing a `SKILL.md`.
-  - `harness-eng/` — the AI-assisted ticket pipeline (spec → impl → verify → PR → KB).
+  - `loop-eng/` — the AI-assisted ticket pipeline (spec → impl → verify → PR → KB).
   - `interview-me/` — interactive interviewing & spec drafting skill.
   - `notion-to-notebooklm/` — Notion recursive markdown export for NotebookLM & podcast prompts.
   - `update-notion/` — placeholder for Notion sync skill.

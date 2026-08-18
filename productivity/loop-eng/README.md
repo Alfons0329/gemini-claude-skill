@@ -1,6 +1,6 @@
-# harness-eng — first three months
+# loop-eng — first three months
 
-A walkthrough for adopting this harness from day one on a new team, in an unfamiliar codebase.
+A walkthrough for adopting this loop from day one on a new team, in an unfamiliar codebase.
 
 One ticket becomes several focused sessions, each with one job. The only thing crossing between them is what got committed. `SPEC.md` is the full design and the reasoning behind every decision; this file is how to actually start.
 
@@ -11,7 +11,7 @@ One ticket becomes several focused sessions, each with one job. The only thing c
 ```bash
 git clone git@github.com:Alfons0329/gemini-claude-skill.git ~/skills
 mkdir -p ~/.claude/skills
-ln -sf ~/skills/productivity/harness-eng    ~/.claude/skills/
+ln -sf ~/skills/productivity/loop-eng    ~/.claude/skills/
 ln -sf ~/skills/productivity/writing-skills ~/.claude/skills/
 ln -sf ~/skills/productivity/interview-me   ~/.claude/skills/
 ```
@@ -42,7 +42,7 @@ There is no working local stack yet. At a large company that takes one to two we
 mkdir -p ~/progress/<ticket-id>
 # paste the ticket text into ~/progress/<ticket-id>/<ticket-id>-ticket.md
 
-/harness-eng spec <ticket-id>
+/loop-eng spec <ticket-id>
 ```
 
 Read what comes back. Where the spec is wrong, the ticket was ambiguous — which is now a specific question to ask your team instead of a vague feeling that you are lost.
@@ -52,8 +52,8 @@ Read what comes back. Where the spec is wrong, the ticket was ambiguous — whic
 ## Month 1 — take bug tickets on purpose
 
 ```bash
-/harness-eng spec <ticket-id>
-/harness-eng rca  <ticket-id>     # bug tickets only
+/loop-eng spec <ticket-id>
+/loop-eng rca  <ticket-id>     # bug tickets only
 ```
 
 `rca` makes you read git history and old commits to explain why a defect shipped.
@@ -71,12 +71,12 @@ Start each repo's `CLAUDE.md` this month too. Anything you look up twice, write 
 The stack works now.
 
 ```bash
-/harness-eng spec      <ticket-id>
-/harness-eng impl      <ticket-id>
-/harness-eng verify    <ticket-id>
-/harness-eng pr-create <ticket-id>
-/harness-eng pr-review <ticket-id> <pr-url>
-/harness-eng kb-update <ticket-id>
+/loop-eng spec      <ticket-id>
+/loop-eng impl      <ticket-id>
+/loop-eng verify    <ticket-id>
+/loop-eng pr-create <ticket-id>
+/loop-eng pr-review <ticket-id> <pr-url>
+/loop-eng kb-update <ticket-id>
 ```
 
 Six sessions. One stage each.
@@ -85,7 +85,7 @@ Six sessions. One stage each.
 
 ---
 
-## Month 3 — the harness starts improving itself
+## Month 3 — the loop starts improving itself
 
 **Learnings graduate.** Strip every proper noun from something you learned. Still useful → it is a method improvement, and belongs in the kernel skill. Nothing left → it is a repo fact, and belongs in that repo's `CLAUDE.md`.
 

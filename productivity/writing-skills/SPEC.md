@@ -5,7 +5,7 @@
 
 ## 1. Why this exists as its own skill
 
-`harness-eng` is the first skill here written to be handed to a cold session and built from a spec, and it will not be the last. Without a written standard, each one is laid out from whatever the authoring session happened to recall, and the set drifts in shape even where every individual skill is correct.
+`loop-eng` is the first skill here written to be handed to a cold session and built from a spec, and it will not be the last. Without a written standard, each one is laid out from whatever the authoring session happened to recall, and the set drifts in shape even where every individual skill is correct.
 
 The role is a **teacher**, not a worker: it produces other skills, and it is never part of a daily loop. Expect to invoke it a handful of times a year.
 
@@ -27,15 +27,15 @@ Its *ideas* are used heavily and credited in `NOTICE.md`. What is rejected is th
 | Company skills repository (private) | facts true across one company | one employer |
 | Repository context file (`CLAUDE.md` / `GEMINI.md` / `AGENTS.md`) | facts true of one repository | one repository |
 
-This is `../harness-eng/SPEC.md` §7.1 applied one level up. There, the kernel/user-space split separated a portable skill from one repository's facts. Here the same split separates a portable *skill set* from one company's, with the per-repository layer unchanged beneath both.
+This is `../loop-eng/SPEC.md` §7.1 applied one level up. There, the kernel/user-space split separated a portable skill from one repository's facts. Here the same split separates a portable *skill set* from one company's, with the per-repository layer unchanged beneath both.
 
 **A single test decides placement: strip every proper noun.** Something useful survives → method, one layer up. Nothing survives → a fact, filed where it is true.
 
-The same test was already written for a different purpose — `../harness-eng/SPEC.md` §9 Q5 uses it to route a learning between the kernel and a repository's context file. One rule now serves three jobs. That is deliberate: a second, similar-but-different test would be a rule to remember and get wrong.
+The same test was already written for a different purpose — `../loop-eng/SPEC.md` §9 Q5 uses it to route a learning between the kernel and a repository's context file. One rule now serves three jobs. That is deliberate: a second, similar-but-different test would be a rule to remember and get wrong.
 
 **The test has one enforcement point that matters** — the moment a method improvement discovered while writing a private skill moves toward the public repository. Every other direction is safe. Gating that one crossing is cheaper and more reliable than auditing whole files.
 
-**Consequence: the standard is publishable by construction.** It contains no slot a company fact could occupy, so none can leak, and publishability stops depending on reviewer discipline. Same argument as `../harness-eng/SPEC.md` §7.1, same conclusion.
+**Consequence: the standard is publishable by construction.** It contains no slot a company fact could occupy, so none can leak, and publishability stops depending on reviewer discipline. Same argument as `../loop-eng/SPEC.md` §7.1, same conclusion.
 
 ## 4. Invocation — model-invoked, deliberately
 
@@ -45,13 +45,13 @@ Phase 3 of `SKILL.md` sets the house default to **user-invoked**: zero standing 
 
 **The cost is one always-loaded description line**, which is why the description is written as a pointer rather than a summary.
 
-**`harness-eng` does not get this treatment.** It commits work and opens pull requests, and its `SPEC.md` §3.1 forbids chaining stages inside one session. An agent able to fire it autonomously is an agent able to skip the boundary that makes the pipeline's verification trustworthy. It stays user-invoked.
+**`loop-eng` does not get this treatment.** It commits work and opens pull requests, and its `SPEC.md` §3.1 forbids chaining stages inside one session. An agent able to fire it autonomously is an agent able to skip the boundary that makes the pipeline's verification trustworthy. It stays user-invoked.
 
 ## 5. Why the ladder comes first
 
 Phase 1 asks whether to write a skill at all, before any question about how to write one. This ordering is the point: most candidate skills are a fact, a one-liner, or something an installed skill already does, and each of those is better served by the repository's context file — which loads automatically and costs no invocation.
 
-A standard that opened with frontmatter would produce well-formed skills that should not exist. Same shape as the laziest-solution-first ladder in `../harness-eng/SPEC.md` §4, applied to documents instead of code.
+A standard that opened with frontmatter would produce well-formed skills that should not exist. Same shape as the laziest-solution-first ladder in `../loop-eng/SPEC.md` §4, applied to documents instead of code.
 
 ## 6. Scope decisions
 
@@ -66,5 +66,5 @@ The public and private sets both install into one directory, so two skills shari
 *Recommended default:* a short lowercase prefix chosen on the first company skill and never changed.
 
 **Q2 — Does the standard govern the context files it names?**
-`SKILL.md` Phase 1 routes one-line rules into `CLAUDE.md` / `GEMINI.md` / `AGENTS.md`, and the frontmatter description claims those files as a trigger, but no phase says how to structure one. `../harness-eng/SPEC.md` §7.1 already rules on what the harness *reads* from that file. The gap is what belongs in it generally.
-*Recommended default:* add one phase covering context files, and keep the boundary explicit — this skill governs how such a file is written; `harness-eng` governs what the harness reads from it. Neither restates the other.
+`SKILL.md` Phase 1 routes one-line rules into `CLAUDE.md` / `GEMINI.md` / `AGENTS.md`, and the frontmatter description claims those files as a trigger, but no phase says how to structure one. `../loop-eng/SPEC.md` §7.1 already rules on what the loop *reads* from that file. The gap is what belongs in it generally.
+*Recommended default:* add one phase covering context files, and keep the boundary explicit — this skill governs how such a file is written; `loop-eng` governs what the loop reads from it. Neither restates the other.

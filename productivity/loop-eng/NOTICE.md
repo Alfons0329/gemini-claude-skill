@@ -60,4 +60,4 @@ SOFTWARE.
 
 ---
 
-Everything else in `productivity/harness-eng/` is original.
+Everything else in `productivity/loop-eng/` is original.

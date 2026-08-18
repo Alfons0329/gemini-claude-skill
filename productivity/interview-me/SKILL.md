@@ -34,7 +34,7 @@ Use when genuine ambiguity exists — where different people would make differen
 
 | Input | Required | Example |
 |---|---|---|
-| Topic, ticket, or file to work from (`$ARGUMENTS`) | Yes | `productivity/harness-eng/SPEC.md`, `"refactor the auth layer"` |
+| Topic, ticket, or file to work from (`$ARGUMENTS`) | Yes | `productivity/loop-eng/SPEC.md`, `"refactor the auth layer"` |
 | Output path | No — defaults to writing back into the input file, or `{topic}-spec.md` if the input was a bare topic | `docs/auth-refactor-spec.md` |
 
 ---

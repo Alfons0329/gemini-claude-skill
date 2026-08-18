@@ -8,9 +8,9 @@ The running example is a video site. Two epics: **upload a video**, **play a vid
 
 ## Read this first
 
-**The harness starts at "you have a ticket."** Everything before that — turning a PRD into epics, turning epics into tickets — is not in it, on purpose. `SPEC.md` §1 says so: that is tech-lead scope, and it is deferred.
+**The loop starts at "you have a ticket."** Everything before that — turning a PRD into epics, turning epics into tickets — is not in it, on purpose. `SPEC.md` §1 says so: that is tech-lead scope, and it is deferred.
 
-So this walkthrough has three phases, and only the third one is the harness.
+So this walkthrough has three phases, and only the third one is the loop.
 
 | Phase | What happens | Harness? |
 |---|---|---|
@@ -26,7 +26,7 @@ Phases A and B are described here anyway, because a good phase C on badly-cut ti
 
 On a team, other people catch your mistakes. Alone, nobody does.
 
-That is the actual problem the harness solves for you. Every stage boundary stands in for a person you do not have:
+That is the actual problem the loop solves for you. Every stage boundary stands in for a person you do not have:
 
 | Missing person | What replaces them |
 |---|---|
@@ -41,7 +41,7 @@ That is the actual problem the harness solves for you. Every stage boundary stan
 
 ## Phase A — PRD to epics
 
-Not the harness. Use plain sessions, then lock the decisions.
+Not the loop. Use plain sessions, then lock the decisions.
 
 **Step 1. Read the PRD and find the fights.**
 
@@ -77,7 +77,7 @@ Not "the storage layer" and "the transcoder." Those are components. A component 
 
 ## Phase B — epic to tickets
 
-Still not the harness. Do it by hand. It takes an hour and it decides everything after.
+Still not the loop. Do it by hand. It takes an hour and it decides everything after.
 
 ```
 EPIC-1  Upload a video
@@ -124,7 +124,7 @@ Done or not done. Nothing else. The epic is the CEO — it wants each unit's sta
 
 ## Phase C — one ticket, end to end
 
-This is the harness. Here is `YT-11` in full.
+This is the loop. Here is `YT-11` in full.
 
 **Before anything.** Write the ticket yourself — there is no tracker handing you one:
 
@@ -141,7 +141,7 @@ Writing "out of scope" here is worth the thirty seconds. It is what stops one ti
 **Session 1 — spec.**
 
 ```bash
-/harness-eng spec YT-11
+/loop-eng spec YT-11
 ```
 
 Out comes `yt-11-spec.md`:
@@ -161,7 +161,7 @@ Four criteria, say. Right-sized. Move on.
 **Session 2 — impl.**
 
 ```bash
-/harness-eng impl YT-11
+/loop-eng impl YT-11
 ```
 
 It climbs the ladder first (§4) — *does this need building? does the framework already do it?* Alone, this rung matters more than usual: there is nobody to say "we already have a helper for that."
@@ -173,7 +173,7 @@ It will stop once to confirm a seam. That is the one place it waits (§9 Q7).
 **Session 3 — verify. This is the one that saves you.**
 
 ```bash
-/harness-eng verify YT-11
+/loop-eng verify YT-11
 ```
 
 A fresh session. It never saw you write the code.
@@ -187,7 +187,7 @@ Then it writes the real end-user test itself and runs it. It is allowed to disag
 **Session 4 — pr-create.**
 
 ```bash
-/harness-eng pr-create YT-11
+/loop-eng pr-create YT-11
 ```
 
 Drafts `yt-11-pr.md`, then opens the PR from it. TL;DR at the top, criteria pasted in full.
@@ -197,7 +197,7 @@ Alone, the PR body is not paperwork — it is the only written record of what yo
 **Session 5 — pr-review.**
 
 ```bash
-/harness-eng pr-review YT-11 <pr-url>
+/loop-eng pr-review YT-11 <pr-url>
 ```
 
 Security gate first, blocking. Then three axes: does it follow the rules, does it match the spec, **what can be deleted**.
@@ -207,7 +207,7 @@ That third axis is the one you cannot do for yourself. Your code always looks li
 **Session 6 — kb-update.**
 
 ```bash
-/harness-eng kb-update YT-11
+/loop-eng kb-update YT-11
 ```
 
 Writes what you learned into the repo's `docs/`. Then append one line to the epic tracker:

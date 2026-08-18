@@ -3,7 +3,7 @@ __pycache__/
 *.skill
 .DS_Store
 
-# Tier 2 — private reference material (internal harness docs, company skills).
+# Tier 2 — private reference material (internal loop-eng docs, company skills).
 # Never commit: contains real ticket IDs, internal acronyms, and customer scenarios.
 # Kept OUTSIDE productivity/ on purpose: those directories get copied to
 # ~/.claude/skills/, and private files must not ride along with an install.

@@ -1,4 +1,4 @@
-# Specification: Harness Engineering — Phase 1 (Baseline Ticket Pipeline)
+# Specification: Loop Engineering — Phase 1 (Baseline Ticket Pipeline)
 
 **Status:** Active — build target for this repo.
 **Scope:** A single mid-level IC (~5 YoE) working tickets inside an existing codebase at a large company. Not a team-wide rollout, not a config-binding CLI, not cross-session orchestration — that tier is deliberately deferred and this document does not depend on it.
@@ -12,7 +12,7 @@ The leverage for an IC at this level is entirely inside one ticket's lifecycle: 
 - routing ambiguous requests to sub-skills (`harness-router`),
 - owning backlog/roadmap ambiguity (`wayfinder`, `triage`).
 
-Those are staff/tech-lead concerns — adopting them now would be building infrastructure for pain not yet felt, which the harness-engineering doctrine itself argues against (decide from a loop, not a hypothesis).
+Those are staff/tech-lead concerns — adopting them now would be building infrastructure for pain not yet felt, which this discipline itself argues against (decide from a loop, not a hypothesis).
 
 ## 2. Attribution
 
@@ -44,24 +44,24 @@ Bug:   SPEC ──> RCA ──> IMPL ──> VERIFY ──> PR-CREATE ──> PR
 | 5 | PR-REVIEW | `pr-review` | security gate, then three-axis review (§6) |
 | 6 | UPDATE-KB | `kb-update` | feedback loop writing learnings back to `docs/` |
 
-All seven are stages of **one skill**, not seven skills — see §7.1. Each runs as `/harness-eng <stage> <ticket-id>` (§3.2).
+All seven are stages of **one skill**, not seven skills — see §7.1. Each runs as `/loop-eng <stage> <ticket-id>` (§3.2).
 
-**SEC-SCAN is not a standalone stage.** Security is a gate *inside* `pr-review` (§6), because it needs exactly the artifact that stage already has — the full diff against a fixed point. A separate session would re-derive that same context to check one narrow axis. Its repair path stays named and distinct: `/harness-eng impl <id> fix-sec` (§5.5).
+**SEC-SCAN is not a standalone stage.** Security is a gate *inside* `pr-review` (§6), because it needs exactly the artifact that stage already has — the full diff against a fixed point. A separate session would re-derive that same context to check one narrow axis. Its repair path stays named and distinct: `/loop-eng impl <id> fix-sec` (§5.5).
 
 ### 3.1 Session boundaries
 
 Each stage runs in its **own fresh session**. The only thing that crosses the boundary is whatever got committed to git — no session inherits another's reasoning or context. This is deliberate, not incidental: it's what makes the `verify` stage's end-user pass trustworthy (§5.2) — it can't inherit `impl`'s blind spots if it never saw `impl`'s session in the first place.
 
 ```
-You (boss) → save the ticket text to <id>-ticket.md → /harness-eng spec
+You (boss) → save the ticket text to <id>-ticket.md → /loop-eng spec
                                       ↓
                        <id>-spec.md committed to the progress repo
                                       ↓
-                    new session reads spec → /harness-eng impl
+                    new session reads spec → /loop-eng impl
                                       ↓
                   code (target repo) + <id>-qa.md + <id>-qa-e2e.md scaffold
                                       ↓
-             new session reads spec + qa.md + scaffold → /harness-eng verify
+             new session reads spec + qa.md + scaffold → /loop-eng verify
                                       ↓
                          PASS → pr-create → pr-review → kb-update
                          FAIL → document repro, fix loop (max 2x) → escalate to boss
@@ -111,7 +111,7 @@ Because the contract is files rather than context, each stage can run in a **dif
 One skill, one grammar:
 
 ```
-/harness-eng <stage> <ticket> [mode] [--human "<free text>"]
+/loop-eng <stage> <ticket> [mode] [--human "<free text>"]
 
 stages:  spec | rca | impl | verify | pr-create | pr-review | kb-update
 modes:   fix-qa | fix-sec          (impl only — §5.5)
@@ -125,41 +125,41 @@ modes:   fix-qa | fix-sec          (impl only — §5.5)
 
 ```bash
 # Session 1 — generate the spec from the ticket
-/harness-eng spec <TICKET-ID>
+/loop-eng spec <TICKET-ID>
 
 # Optional — align on ambiguities before implementing
 /interview-me <ticket-dir>/<ticket-id>-spec.md
 
 # Session 1b — BUG TICKETS ONLY: root-cause before any fix is written (§3.3)
-/harness-eng rca <TICKET-ID>
+/loop-eng rca <TICKET-ID>
 
 # Session 2 — implement from the spec (and the RCA, if this is a bug)
-/harness-eng impl <TICKET-ID>
+/loop-eng impl <TICKET-ID>
 
 # Session 3 — verify (environment pre-flight, dev pass, then E2E pass)
-/harness-eng verify <TICKET-ID>
+/loop-eng verify <TICKET-ID>
 
 # Session 4 — draft the body, then open the PR (run manually; nothing chains)
-/harness-eng pr-create <TICKET-ID>
+/loop-eng pr-create <TICKET-ID>
 
 # Session 5 — review the PR once it's open
-/harness-eng pr-review <TICKET-ID> <pr-url>
+/loop-eng pr-review <TICKET-ID> <pr-url>
 
 # Session 6 — write learnings back
-/harness-eng kb-update <TICKET-ID>
+/loop-eng kb-update <TICKET-ID>
 ```
 
 Repair modes, inside the `impl ↔ verify` loop only (§5.5):
 
 ```bash
-/harness-eng impl <TICKET-ID> fix-qa
-/harness-eng impl <TICKET-ID> fix-sec
+/loop-eng impl <TICKET-ID> fix-qa
+/loop-eng impl <TICKET-ID> fix-sec
 ```
 
 Per-invocation human context, valid on any stage:
 
 ```bash
-/harness-eng spec <TICKET-ID> --human "Only reproduces on kernel 6.8.10; triage to that version only."
+/loop-eng spec <TICKET-ID> --human "Only reproduces on kernel 6.8.10; triage to that version only."
 ```
 
 **Artifact paths are never passed as arguments.** Each stage resolves the ticket directory once (Q13), then derives every filename from the ticket ID (Q16) — one fewer thing to get wrong, and one fewer way for two stages to disagree about where a file lives.
@@ -265,7 +265,7 @@ The `impl` stage is not trusted to decide what "correct from a user's perspectiv
 
 ```
 Wrote <ticket-id>-qa-e2e.md — 6 cases. Run them, then:
-  /harness-eng verify <ticket-id> --human "E2E-1..5 pass, E2E-6 fails: <what happened>"
+  /loop-eng verify <ticket-id> --human "E2E-1..5 pass, E2E-6 fails: <what happened>"
 ```
 
 The returned text lands verbatim in the artifact (§7.2), so the next session has the results in writing rather than in someone's memory.
@@ -301,7 +301,7 @@ A `FAIL` does not automatically mean the implementation is broken. **Classify th
 
 **First, the pre-flight: did the test actually exercise the code?**
 
-Three of the four classes below assume the test *ran*. A fourth cause sits underneath them all — the harness never reached the code at all. Expired credentials, a down VPN, a service that isn't up, the wrong config file. It produces a `FAIL` identical to a real code bug, and routing it into `fix-qa` spends two attempts editing correct code to satisfy a test that never executed.
+Three of the four classes below assume the test *ran*. A fourth cause sits underneath them all — the loop never reached the code at all. Expired credentials, a down VPN, a service that isn't up, the wrong config file. It produces a `FAIL` identical to a real code bug, and routing it into `fix-qa` spends two attempts editing correct code to satisfy a test that never executed.
 
 Run a **control case**: any case in `<ticket-id>-qa.md` that predates this ticket and does not touch the change.
 
@@ -317,7 +317,7 @@ Also confirm the control case can still **fail** — a suite that cannot go red 
 | Failure type | What it means | Who fixes it | How |
 |---|---|---|---|
 | **Environment** | The test never reached the code — the control case fails too | you (human) | fix the unmet precondition. **Zero retries** — never enter `fix-qa` (§5.6) |
-| **Code bug** | The implementation doesn't do what the acceptance criterion says | the impl session | route back: `/harness-eng impl <id> fix-qa` (bounded — §5.6) |
+| **Code bug** | The implementation doesn't do what the acceptance criterion says | the impl session | route back: `/loop-eng impl <id> fix-qa` (bounded — §5.6) |
 | **Wrong assertion** | The `Expected:` value in the QA case is itself incorrect | you (human) | edit `Expected:` in the case, add a `## Correction log` row, re-run `verify` |
 | **Wrong test step** | The `Setup:` or `Action:` block is incorrect — the impl session wrote the test wrong | you (human) | edit the `Setup:`/`Action:` block, add a `## Correction log` row, re-run `verify` |
 
@@ -336,7 +336,7 @@ Also confirm the control case can still **fail** — a suite that cannot go red 
 
 A future reader then sees both the original expectation and why it moved, instead of a doc that quietly always agreed with the code.
 
-**Scope of `fix-qa`:** it belongs to the `impl ↔ verify` loop only, and that loop must close *before* a PR is opened. Correctness findings raised later in `pr-review` (§6) do **not** re-enter `fix-qa` — you address the comment and re-push. The only named repair loop that starts from review is a **security** finding: `/harness-eng impl <id> fix-sec`.
+**Scope of `fix-qa`:** it belongs to the `impl ↔ verify` loop only, and that loop must close *before* a PR is opened. Correctness findings raised later in `pr-review` (§6) do **not** re-enter `fix-qa` — you address the comment and re-push. The only named repair loop that starts from review is a **security** finding: `/loop-eng impl <id> fix-sec`.
 
 ### 5.6 Bounded retry & escalation
 
@@ -374,7 +374,7 @@ Two categories are called out because they are what an **agent-written** diff ge
 
 **Keep it narrow.** This is not a code-quality pass; quality findings belong to §6.2. A gate that drifts into style stops being a gate, because a blocking finding that is really a preference teaches everyone to route around the block.
 
-A finding here **blocks the PR** and writes `<ticket-id>-security-review.md`. It is the one review finding with a named repair loop back into implementation: `/harness-eng impl <id> fix-sec`. Everything else in §6.2 is addressed by editing and re-pushing, not by re-entering a repair mode (§5.5).
+A finding here **blocks the PR** and writes `<ticket-id>-security-review.md`. It is the one review finding with a named repair loop back into implementation: `/loop-eng impl <id> fix-sec`. Everything else in §6.2 is addressed by editing and re-pushing, not by re-entering a repair mode (§5.5).
 
 ### 6.2 Three-axis review
 
@@ -389,7 +389,7 @@ Report the three axes under separate headings, never merged or re-ranked against
 ## 7. Directory Structure
 
 ```
-productivity/harness-eng/          # source — publishable as-is
+productivity/loop-eng/          # source — publishable as-is
 ├── SKILL.md                       # the engine: dispatch, boundaries, escalation
 ├── SPEC.md                        # this document
 ├── NOTICE.md                      # attribution — mattpocock/skills, ponytail (both MIT)
@@ -403,7 +403,7 @@ productivity/harness-eng/          # source — publishable as-is
 └── deferred/
     └── spec-phase-2.md            # NOT ACTIVE — not a build target
 
-~/.claude/skills/harness-eng/      # install — one copy, resolves in every repo
+~/.claude/skills/loop-eng/      # install — one copy, resolves in every repo
 ```
 
 Same shape as every other skill in this repo: `SKILL.md` and `SPEC.md` side by side. No index file — the directory is the index.
@@ -439,18 +439,18 @@ Two reasons the split is not merely a preference:
 
 The consequence is that the kernel is **publishable by construction**: there is no slot in it where a company fact could sit, so none can leak. Publishability stops depending on reviewer discipline.
 
-**Write bindings as facts about the repo, not as instructions to the harness.** "The integration stack is reachable only over VPN; `KUBECONFIG` must point at `<path>`" is true for a human onboarding and stays true if the harness is replaced. "When running `verify`, remind me about the VPN" is neither. The first is uncontroversial to commit to a file the whole team shares; the second is workflow trivia in a shared namespace.
+**Write bindings as facts about the repo, not as instructions to the loop.** "The integration stack is reachable only over VPN; `KUBECONFIG` must point at `<path>`" is true for a human onboarding and stays true if the loop is replaced. "When running `verify`, remind me about the VPN" is neither. The first is uncontroversial to commit to a file the whole team shares; the second is workflow trivia in a shared namespace.
 
 **The skill must degrade gracefully when `CLAUDE.md` documents nothing.** Each stage names its own fallback and proceeds — never blocks, never invents a convention and presents it as the repo's. §6.2 already does this correctly, applying its smell baseline "even when the repo documents nothing"; the same rule holds everywhere.
 
-`interview-me` remains a separate installed skill. "One skill" scopes to the harness loop, not to the whole skill set — `interview-me` is useful on its own, outside any pipeline, and the `spec` stage delegates to it rather than reimplementing it.
+`interview-me` remains a separate installed skill. "One skill" scopes to the loop, not to the whole skill set — `interview-me` is useful on its own, outside any pipeline, and the `spec` stage delegates to it rather than reimplementing it.
 
 ### 7.2 `--human` — per-invocation context
 
 `--human "<free text>"` is valid on every stage. It carries what neither other layer can: a fact true of *this ticket only*.
 
 ```bash
-/harness-eng spec <TICKET-ID> --human "Only reproduces on kernel 6.8.10; triage to that version only."
+/loop-eng spec <TICKET-ID> --human "Only reproduces on kernel 6.8.10; triage to that version only."
 ```
 
 Three rules make it safe:
@@ -462,7 +462,7 @@ Three rules make it safe:
 
 ## 8. Handover Checklist
 
-**Applies to everything below:** kernel only (§7.1) — no company facts, no hardcoded conventions, and an explicit fallback for when the target repo's `CLAUDE.md` documents nothing. One skill, installed user-level to `~/.claude/skills/harness-eng/`. Follow `../writing-skills/SKILL.md`, the house authoring standard, throughout.
+**Applies to everything below:** kernel only (§7.1) — no company facts, no hardcoded conventions, and an explicit fallback for when the target repo's `CLAUDE.md` documents nothing. One skill, installed user-level to `~/.claude/skills/loop-eng/`. Follow `../writing-skills/SKILL.md`, the house authoring standard, throughout.
 
 **Rules that bind every file below**, resolved in §9 and not restated per item: filenames are `<ticket-id-lowercase>-<artifact>.md` and only the named artifacts are ever read (Q16); a missing or malformed input fails fast naming the artifact, the path searched, and the command that produces it (Q8); a stage waits only for an answer given in seconds and otherwise exits with instructions for returning results (Q7/Q9); every stage appends one or two lines to `<id>-progress.md` (Q15); no stage triggers another (§3.1).
 
@@ -522,8 +522,8 @@ Three alternatives were rejected:
 
 | Rejected | Why |
 |---|---|
-| `.harness/<id>/` committed in the target repo | Puts personal working notes in shared source — a change a teammate is right to object to. Also disappears on `git checkout main`, and a ticket spanning two repos has no single home. |
-| `.harness/<id>/` gitignored in the target repo | Never committed, so it has no history at all — this abandons §3.1's contract outright while buying no privacy the separate repo does not already give. |
+| `.loop/<id>/` committed in the target repo | Puts personal working notes in shared source — a change a teammate is right to object to. Also disappears on `git checkout main`, and a ticket spanning two repos has no single home. |
+| `.loop/<id>/` gitignored in the target repo | Never committed, so it has no history at all — this abandons §3.1's contract outright while buying no privacy the separate repo does not already give. |
 | Epic passed as part of the ticket argument | Makes every invocation longer and requires the human to remember which grouping a ticket sits under; a cold session cannot remind them. |
 
 Two consequences carried elsewhere:
@@ -547,8 +547,8 @@ Search for a directory named `<ticket-id>` anywhere beneath the progress root. G
 **Mechanism: a `<ticket-id>` argument containing `/` is a path, not an identifier**, resolved relative to the progress root. This makes pointing a normal invocation rather than an interactive repair, and it carries no state between sessions:
 
 ```bash
-/harness-eng verify eng-1                    # search
-/harness-eng verify <grouping>/<...>/eng-1   # pointed
+/loop-eng verify eng-1                    # search
+/loop-eng verify <grouping>/<...>/eng-1   # pointed
 ```
 
 The ticket ID for artifact-naming purposes is the last path segment, so a pointed invocation and a searched one produce identical filenames. *(Number retained — other documents cite "Q13".)*
@@ -571,14 +571,14 @@ The ticket ID for artifact-naming purposes is the last path segment, so a pointe
 
 **Stages read only the artifacts named above.** A ticket directory also accumulates working material — logs, scripts, captured bundles, build detritus — and a cold session that wanders into a stale log bundle draws conclusions from evidence belonging to a different run. The named set is the contract; everything else in the directory is scratch, and invisible to the pipeline.
 
-**Q14 — Is `harness-eng` user-invoked or model-invoked?** — **RESOLVED.**
+**Q14 — Is `loop-eng` user-invoked or model-invoked?** — **RESOLVED.**
 **User-invoked** (`disable-model-invocation: true` in Claude Code; the equivalent flag on other harnesses). This is the house default set by `../writing-skills/SKILL.md` Phase 3, and it is the right one here for a specific reason: the stages commit work and open pull requests, and §3.1 forbids chaining stages inside one session. An agent able to fire a stage autonomously is an agent able to cross the session boundary that makes `verify`'s end-user pass trustworthy. The frontmatter `description` is therefore human-facing — a one-line summary for a slash-command list, with trigger phrasing stripped, since nothing matches against it.
 
 **Q3 — Where do skills read project conventions from?** ~~(§4)~~ — **RESOLVED, see §7.1.**
 Skills are kernel-only and installed user-level; every company- and repo-specific fact lives in that repo's `CLAUDE.md`, which is loaded automatically at session start. No per-repo skill copies. Each stage must name a fallback for when `CLAUDE.md` documents nothing. *(Number retained — other documents cite "Q3".)*
 
 **Q4 — What is the repair-mode invocation syntax?** ~~(§5.5, §6.1 vs §3.2)~~ — **RESOLVED, see §3.2.**
-The single grammar answers it: `/harness-eng <stage> <ticket-id> [mode] [--human "<text>"]`. Mode is a trailing optional token valid only on `impl`; artifact paths are derived from `<ticket-id>` rather than passed, which removes the argument-shape inconsistency the question was about. *(Number retained — other documents cite "Q4".)*
+The single grammar answers it: `/loop-eng <stage> <ticket-id> [mode] [--human "<text>"]`. Mode is a trailing optional token valid only on `impl`; artifact paths are derived from `<ticket-id>` rather than passed, which removes the argument-shape inconsistency the question was about. *(Number retained — other documents cite "Q4".)*
 
 ### Would produce a vague skill if left open
 
@@ -722,13 +722,13 @@ A stage that exits writes down precisely what it needs and how to return it, the
 
 ```
 Wrote <ticket-id>-qa-e2e.md — 6 cases. Run them, then:
-  /harness-eng verify <ticket-id> --human "E2E-1..5 pass, E2E-6 fails: <what happened>"
+  /loop-eng verify <ticket-id> --human "E2E-1..5 pass, E2E-6 fails: <what happened>"
 ```
 
 **Why not one blanket rule.** *Always block* leaves a session open overnight with its context going stale against a world that moved. *Never block* charges a full cold session for a ten-second question. The cost that matters is the operator's attention, and it is not uniform across the two cases.
 
 **Q8 — What happens when an input artifact is missing or malformed?** — **RESOLVED.** Fail fast, and say three things: which artifact is missing, the exact path it was looked for at, and the command that produces it. Never improvise a substitute, never proceed on a partial read. Same shape as Q10's `ticket.md` message:
 
-> `No <ticket-id>-spec.md at <resolved-path>. Run /harness-eng spec <ticket-id> first.`
+> `No <ticket-id>-spec.md at <resolved-path>. Run /loop-eng spec <ticket-id> first.`
 
 *(Numbers retained — other documents cite "Q7", "Q8", "Q9".)*

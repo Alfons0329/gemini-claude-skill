@@ -1,8 +1,8 @@
-# Specification: Harness Engineering — Phase 2 (Portable Kernel Extension)
+# Specification: Loop Engineering — Phase 2 (Portable Kernel Extension)
 
 > ## ⛔ NOT ACTIVE — NOT A BUILD TARGET
 >
-> Deferred reference design for a scope the active harness does not have. **Do not read, cite, or draw requirements from this file when working on Phase 1** — `../SPEC.md` is complete and self-contained on its own. Nothing here is installed, implemented, or planned.
+> Deferred reference design for a scope the active loop does not have. **Do not read, cite, or draw requirements from this file when working on Phase 1** — `../SPEC.md` is complete and self-contained on its own. Nothing here is installed, implemented, or planned.
 
 **Status:** Deferred. Not being built. Kept as a reference design in case scope grows past a single IC (e.g. onboarding a team, or taking on tech-lead-shaped ambiguity ownership). Revisit only when the pain this solves is actually felt — per the doctrine's own rule against building infrastructure ahead of a hypothesis.
 
@@ -60,7 +60,7 @@ Four contract files in `docs/agents/`, synthesized from free-form input at setup
 
 ## 6. Distribution mechanism (revised)
 
-The original draft specified a bash CLI (`setup-harness-eng --phase --codebase --human --overwrite --global`). The real repo doesn't do this — it distributes via the Claude Code plugin marketplace or `npx skills@latest add`, and binds project specifics via an **in-session skill** (`setup-matt-pocock-skills`), not an external script. If Phase 2 is ever built, prefer that model: a skill invoked inside a session, not a standalone installer binary.
+The original draft specified a bash CLI (`setup-loop-eng --phase --codebase --human --overwrite --global`). The real repo doesn't do this — it distributes via the Claude Code plugin marketplace or `npx skills@latest add`, and binds project specifics via an **in-session skill** (`setup-matt-pocock-skills`), not an external script. If Phase 2 is ever built, prefer that model: a skill invoked inside a session, not a standalone installer binary.
 
 ## 7. Privacy / distribution architecture (if ever made public)
 
@@ -72,4 +72,4 @@ Three-tier separation, so the public kernel repo never carries personal or compa
 
 ## 8. Atomicity constraint (if ever built)
 
-Phase 1 and Phase 2 should not coexist in the same active harness — mixing creates conflicting session contracts. A switch between them (or a guideline update) should be an atomic replacement, not a partial merge. This constraint only matters once there's an installer to enforce it; Phase 1 alone has no such switch to protect.
+Phase 1 and Phase 2 should not coexist in the same active loop — mixing creates conflicting session contracts. A switch between them (or a guideline update) should be an atomic replacement, not a partial merge. This constraint only matters once there's an installer to enforce it; Phase 1 alone has no such switch to protect.

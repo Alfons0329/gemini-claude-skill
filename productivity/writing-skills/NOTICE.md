@@ -30,7 +30,7 @@ SOFTWARE.
 
 ## `dietrichgebert/ponytail`
 
-The "decide whether to write one at all" ladder in `SKILL.md` Phase 1 applies the same laziest-solution-first shape used in `../harness-eng/SPEC.md` §4, adapted from [`dietrichgebert/ponytail`](https://github.com/dietrichgebert/ponytail) (MIT, Copyright (c) 2026 DietrichGebert). Full license text in `../harness-eng/NOTICE.md`.
+The "decide whether to write one at all" ladder in `SKILL.md` Phase 1 applies the same laziest-solution-first shape used in `../loop-eng/SPEC.md` §4, adapted from [`dietrichgebert/ponytail`](https://github.com/dietrichgebert/ponytail) (MIT, Copyright (c) 2026 DietrichGebert). Full license text in `../loop-eng/NOTICE.md`.
 
 ---
 
