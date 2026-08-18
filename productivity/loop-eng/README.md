@@ -173,6 +173,7 @@ One or two lines per stage. The whole ticket, recovered in five seconds.
 | File | What it holds |
 |---|---|
 | `example/solo-feature-owner.md` | the other shape — one person owning a whole feature, PRD through ship |
+| `example/self-check.md` | the build-completion test — does the loop actually close? |
 | `SPEC.md` | the full design, and why each decision beat its alternatives |
 | `SPEC.md` §9 | every question that was closed, and the reasoning — read before re-opening one |
 | `../writing-skills/SKILL.md` | the standard this skill was written to |

@@ -474,6 +474,7 @@ Three rules make it safe:
 - [ ] Write `reference/pr-lifecycle.md` with `pr-create` drafting `<id>-pr.md` (TL;DR, what changed, why, acceptance criteria pasted verbatim, how verified, deliberately skipped) then opening the PR from it and printing tracker updates rather than performing them (Q6), plus the one coarse line appended to a parent epic tracker when one exists (Q17); and `pr-review` implementing the §6.1 security gate (blocking, writes `-security-review.md`, repairs via `fix-sec`) followed by §6.2's three-axis parallel-subagent review.
 - [ ] Write `reference/kb-update.md` — Q5: scope picks `docs/shared/` or `docs/project/<slug>/` in the **target** repo, written on the feature branch so it reaches the team through PR review; the proper-noun graduation test routing method improvements out to the kernel instead; and harvesting `ponytail:` markers into a ledger under `docs/shared/`.
 - [ ] Update `NOTICE.md` crediting `mattpocock/skills` (MIT) for §4 and §6, and `dietrichgebert/ponytail` (MIT) for the ladder in §4 and the deletion axis in §6.2.
+- [ ] Run `example/self-check.md` and answer every check with a `file:line` citation. It traces a cold-start requirement through all seven stages and asks whether each handoff lands, whether the cycle closes back to `spec`, whether every fallback announces itself, and whether every failure path has a home. **The build is not done until it passes** — a checklist of eight written files says the files exist, not that they compose.
 
 ## 9. Open Questions
 
