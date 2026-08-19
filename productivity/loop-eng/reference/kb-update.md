@@ -33,7 +33,7 @@ Always the pipeline's last stage for a ticket (SKILL.md, "Resolving the ticket d
 
 **Harvest `ponytail:` markers** left in the diff (`reference/ticket-impl.md`) into a debt ledger under `docs/shared/` — one entry per marker, the ceiling it named and the upgrade path, so a deliberate shortcut stays visible to the team instead of rotting into "later means never."
 
-**Close the loop back to `spec`.** A `docs/` entry alone isn't found automatically — `spec` (`reference/spec-create.md`) only reads the project context file, never browses `docs/` on its own. So where a `docs/shared/` entry records a convention future tickets need at spec time (not just at implementation time), also propose a one-line addition to the target repo's `CLAUDE.md` pointing at it: `See docs/shared/<file>.md for <what>.` Without this, a lesson this stage just wrote down would never reach the next ticket's `spec` session, and the pipeline would stop compounding across tickets — which is the entire point of writing it down at all.
+**Close the loop back to every stage, not just `spec`.** A `docs/` entry alone isn't found automatically — no stage browses `docs/` on its own, each only reads the project context file (SKILL.md, "Reading the project context file" — this is true for every stage, not only `spec`). So where a `docs/shared/` entry records a convention some *future stage* would otherwise have to re-discover the hard way — a coding trap `impl` would re-hit, a precondition `verify` would need, not only something `spec` needs before writing acceptance criteria — also propose a one-line addition to the target repo's `CLAUDE.md` pointing at it: `See docs/shared/<file>.md for <what>.` Without this, a lesson this stage just wrote down would never reach any future ticket's session, and the pipeline would stop compounding across tickets — which is the entire point of writing it down at all.
 
 ## The graduation test — kernel or repo?
 
@@ -46,7 +46,7 @@ Mixing the two is how a portable kernel silently acquires one employer's convent
 1. Read `<id>-rca.md` (bug tickets), `<id>-qa.md`, and the diff.
 2. Draft the `docs/` entry (or entries) per the scope rule, plus a ledger entry for any `ponytail:` marker in the diff.
 3. Run the graduation test on each candidate learning; route kernel-shaped ones to a follow-up edit of the kernel skill rather than into `docs/`.
-4. For any `docs/` entry a future ticket would need *before* or *during* `spec`, propose the one-line `CLAUDE.md` pointer described above.
+4. For any `docs/` entry a future ticket's session — any stage, not only `spec` — would otherwise have to rediscover the hard way, propose the one-line `CLAUDE.md` pointer described above.
 5. Commit the `docs/` (and any `CLAUDE.md`) changes on the feature branch alongside (or as a follow-up commit to) the code. If a parent epic tracker is present, append the one closing line — `<ticket-id>  done` or `<ticket-id>  blocked: <one line>` — per SKILL.md; never create the tracker if it isn't already there.
 6. Append the progress line and stop.
 
@@ -56,5 +56,5 @@ Mixing the two is how a portable kernel silently acquires one employer's convent
 - Every bug ticket's *What would have caught it* items landed somewhere, sourced back to the RCA.
 - Every `ponytail:` marker in the diff has a matching ledger row.
 - Every candidate learning was run through the graduation test, and its destination (kernel vs. `docs/`) matches the result.
-- Any `docs/` entry a future `spec` session would need has a matching one-line pointer proposed in `CLAUDE.md` — the loop back to `spec` is closed, not just written down.
+- Any `docs/` entry a future stage's session would need automatically found has a matching one-line pointer proposed in `CLAUDE.md` — the loop back is closed, not just written down.
 - The parent epic tracker, if one exists, gained exactly one line — never more, never per-AC detail.
