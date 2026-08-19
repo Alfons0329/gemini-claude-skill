@@ -6,6 +6,105 @@ One ticket becomes several focused sessions, each with one job. The only thing c
 
 ---
 
+## The whole pipeline, one ticket
+
+Every stage below is invoked by you, in its own fresh session — nothing here ever chains into the next stage on its own. The two repair loops (`fix-qa`, `fix-sec`) are the only named exceptions to "one stage, one session," and both are still operator-invoked.
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Op as Operator
+    participant Prog as Progress repo
+    participant Sess as Stage session
+    participant Tgt as Target repo
+
+    Note over Prog: personal, one dir per ticket
+    Note over Sess: fresh every invocation — no memory of the last
+    Note over Tgt: code + CLAUDE.md + docs/
+    Note over Op,Tgt: Before stage 1 — the operator pastes the ticket text by hand
+    Op->>Prog: write <id>-ticket.md
+
+    rect rgb(235, 235, 250)
+    Note over Sess: spec
+    Op->>Sess: /loop-eng spec <id>
+    Sess->>Prog: read <id>-ticket.md
+    Sess->>Tgt: read CLAUDE.md (proceed on a named fallback if absent)
+    Sess->>Prog: write <id>-spec.md
+    Sess-->>Op: report, stop
+    end
+
+    opt ticket is a bug
+    rect rgb(250, 235, 235)
+    Note over Sess: rca — fresh session, bug tickets only
+    Op->>Sess: /loop-eng rca <id>
+    Sess->>Prog: read <id>-ticket.md, <id>-spec.md
+    Sess->>Prog: write <id>-rca.md
+    Sess-->>Op: report, stop — or: root cause doesn't hold, back to spec
+    end
+    end
+
+    rect rgb(235, 250, 235)
+    Note over Sess: impl — fresh session
+    Op->>Sess: /loop-eng impl <id>
+    Sess->>Prog: read <id>-spec.md (+ <id>-rca.md on a bug)
+    Sess->>Op: confirm seams — the one in-session wait in the whole pipeline
+    Op-->>Sess: confirmed
+    Sess->>Tgt: climb the ladder, commit code
+    Sess->>Prog: write <id>-qa.md, <id>-qa-e2e.md scaffold
+    Sess-->>Op: report, stop
+    end
+
+    rect rgb(250, 250, 225)
+    Note over Sess: verify — fresh session, never saw impl's reasoning
+    Op->>Sess: /loop-eng verify <id>
+    Sess->>Prog: read <id>-qa.md, the scaffold
+    Sess->>Sess: pre-flight (control case, or a documented fallback)
+    Sess->>Tgt: dev pass, then E2E pass
+    Sess->>Prog: write Result: lines, <id>-verify-trace.md
+    Sess-->>Op: PASS, stop — or classify a FAIL and exit
+    end
+
+    opt verify classified a code bug
+    Op->>Sess: /loop-eng impl <id> fix-qa  (fresh session, bounded — 2 attempts)
+    Sess-->>Op: fixed — or escalate with the repro and both attempts
+    end
+
+    rect rgb(225, 245, 250)
+    Note over Sess: pr-create — fresh session
+    Op->>Sess: /loop-eng pr-create <id>
+    Sess->>Prog: read <id>-spec.md, <id>-qa.md
+    Sess->>Prog: draft <id>-pr.md
+    Sess->>Tgt: open the PR
+    Sess-->>Op: print tracker updates, stop
+    end
+
+    rect rgb(250, 230, 245)
+    Note over Sess: pr-review — fresh session
+    Op->>Sess: /loop-eng pr-review <id> <pr-url>
+    Sess->>Tgt: security gate (OWASP-framed), then standards / spec / deletion axes in parallel
+    Sess-->>Op: findings, stop
+    end
+
+    opt security finding
+    Op->>Sess: /loop-eng impl <id> fix-sec  (fresh session)
+    Sess-->>Op: fixed, back to pr-review
+    end
+
+    rect rgb(245, 245, 230)
+    Note over Sess: kb-update — fresh session, always last
+    Op->>Sess: /loop-eng kb-update <id>
+    Sess->>Prog: read <id>-rca.md, <id>-qa.md
+    Sess->>Tgt: write docs/, propose a CLAUDE.md pointer
+    Sess-->>Op: report, stop
+    end
+
+    Note over Op,Tgt: CLAUDE.md now carries what this ticket learned —<br/>every future stage reads it automatically, starting with the next ticket
+```
+
+Nothing above names a language, a framework, or a host — that's the point: the same diagram is the whole workflow whether the target repo is a web app, a CLI, or (see `example/smb-client-server.md`) two shell scripts wrapping an OS feature.
+
+---
+
 ## Setup — ten minutes, day one
 
 ```bash
