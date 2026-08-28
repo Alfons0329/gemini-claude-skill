@@ -67,7 +67,7 @@ Two kinds of artifact, and the difference is load-bearing:
 | | Artifacts | Read by a later stage? |
 |---|---|---|
 | **Drivers** | `-spec.md`, `-rca.md`, `-qa.md`, `-qa-e2e.md` | **Yes** — these are the contract; every stage row above names which ones it reads. |
-| **Records** | `-progress.md`, `-verify-trace.md`, `-pr.md`, `-security-review.md` | **No** — written once, for a human to read on demand. Never loaded as pipeline input. |
+| **Records** | `-progress.md`, `-verify-trace.md`, `-pr.md`, `-security-review.md` | **No** — written once, for a human to read on demand. Never loaded as pipeline input. One named exception: `impl <id> fix-sec` reads `-security-review.md`, because that record *is* the finding the invocation exists to repair (`reference/ticket-impl.md`, "Repair mode: `fix-sec`"). |
 
 A record is never a shortcut for re-deriving what a driver already says. `<id>-verify-trace.md` exists so a human can audit a triage ruling later; nothing downstream reads it — `pr-create`'s "how it was verified" comes from `<id>-qa.md`'s own `Result:` lines (a driver), not from re-opening the trace. `<id>-progress.md` is read by the operator coming back from time away, not by the next stage. Both stay short by construction: a record that grows into prose has stopped being a record and started being a second, unreliable copy of a driver.
 
