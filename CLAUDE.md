@@ -23,7 +23,11 @@ A personal collection of agent **skills** — packaged prompt/workflow definitio
   - `notion-to-notebooklm/` — Notion recursive markdown export for NotebookLM & podcast prompts.
   - `update-notion/` — placeholder for Notion sync skill.
 - `shared/scripts/` — helper scripts invoked by skills at runtime (e.g., `notion_to_markdown.py`).
-- `temp_skill/`, `temp_leetcode/` — staging ground for skill drafts before promotion into `interview/` or `productivity/`.
+- `setup.sh` — installs the skills onto a machine (symlinks, private progress repo, personal context file). Idempotent.
+- `onboard-checklist.md` — how to adopt this skill set at any company, and where each kind of `CLAUDE.md` belongs.
+- `_private/` — gitignored. Personal notes and drafts. Never committed.
+
+New skills are drafted in place under `interview/` or `productivity/`; there is no separate staging directory.
 
 ## Conventions when adding or editing a skill
 
