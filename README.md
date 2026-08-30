@@ -2,19 +2,26 @@
 
 A collection of cross-AI-Agent skills compatible with **Claude Code**, **Gemini CLI**, **Antigravity CLI**, and other AI assistant platforms.
 
-## Install
+## Getting started
+
+**1. Read [`onboard-checklist.md`](onboard-checklist.md).** It is the manual for
+using these skills at any company: where each kind of `CLAUDE.md` goes, what
+belongs in each one, how to ramp on a codebase you have never seen, and the
+gotchas that cost time the first few times.
+
+**2. Install:**
 
 ```bash
-git clone <this-repo-url> ~/skills
+git clone https://github.com/Alfons0329/gemini-claude-skill.git ~/skills
 cd ~/skills
-./setup.sh            # --dry-run to preview, --all for interview skills too
+./setup.sh
 ```
 
-Then restart your agent session — skills load at startup.
+Then restart your agent session — skills are loaded at startup.
 
-New job? Read [`onboard-checklist.md`](onboard-checklist.md): where each kind
-of `CLAUDE.md` goes, what belongs in each, and how to ramp on an unfamiliar
-codebase.
+`./setup.sh --dry-run` prints what it would do and changes nothing; run that
+first on a machine you do not own. `./setup.sh --all` installs the interview
+prep skills too. The script is idempotent — safe to re-run any time.
 
 ## Repository Structure
 

@@ -10,7 +10,7 @@ Nothing here names an employer, a repo, or a stack. It works anywhere.
 ## 1. Install — five minutes
 
 ```bash
-git clone <this-repo-url> ~/skills
+git clone https://github.com/Alfons0329/gemini-claude-skill.git ~/skills
 cd ~/skills
 ./setup.sh
 ```
