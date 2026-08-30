@@ -1,9 +1,12 @@
 ---
 name: leetcode-roadmap
 description: Automated study roadmap and batch-classification page generator for LeetCode/NeetCode topics. Organizes problem sets into sequential study batches on Notion parent pages.
+disable-model-invocation: true
 ---
 
 # LeetCode Roadmap Skill
+
+**User-invoked.** This skill rewrites Notion parent pages and mutates database rows — start it by typing the command; nothing here fires it on its own.
 
 Automates the process of generating structured, batched study roadmaps on parent topic pages in Notion, populated with direct database page links, topic-level applicability checklists, and standard references.
 

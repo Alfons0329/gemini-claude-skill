@@ -1,9 +1,12 @@
 ---
 name: leetcode-note
 description: Automated note-taking and pattern-guide generation for LeetCode problems. Summarizes discussions into structured personal notes or holistic pattern-based study guides.
+disable-model-invocation: true
 ---
 
 # LeetCode Note Skill
+
+**User-invoked.** This skill writes into your Notion pages and databases — start it by typing the command; nothing here fires it on its own.
 
 Automates the process of saving finalized LeetCode discussions directly into Notion. This skill ensures your study guides and problem notes stay synchronized with your latest insights without generating local markdown files in the workspace.
 

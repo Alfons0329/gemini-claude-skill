@@ -56,3 +56,17 @@ For the implementation session:
 2.  Set up the Notion API integration to handle both full rewrites (per-problem) and header-based partial updates (holistic).
 3.  Add strict validation logic to prevent "Topic Drift" (mode/content mismatch).
 4.  Ensure batch processing handles potential API timeouts gracefully without losing state for completed items.
+
+## Invocation
+
+**User-invoked** (`disable-model-invocation: true`).
+
+This skill writes into your Notion pages and databases. Per the house standard (`productivity/writing-skills/SKILL.md`,
+Phase 3), a skill with side effects stays user-invoked: a model that can reach it
+on its own can perform those writes without anyone asking for them, and a Notion
+page overwritten by accident has no undo the skill can offer.
+
+The flag above is the Claude Code mechanism. On a harness with no equivalent, the
+first line of `SKILL.md`'s body states the same intent in prose, so a reader knows
+what was meant even where it cannot be enforced.
+

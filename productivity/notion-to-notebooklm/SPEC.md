@@ -59,3 +59,17 @@ To begin implementation in the next session:
 
 ## Open Items
 - None. All major decisions and constraints are resolved and aligned.
+
+## Invocation
+
+**User-invoked** (`disable-model-invocation: true`).
+
+This skill reads a Notion tree with a live token and writes files to disk. Per the house standard (`productivity/writing-skills/SKILL.md`,
+Phase 3), a skill with side effects stays user-invoked: a model that can reach it
+on its own can perform those writes without anyone asking for them, and a Notion
+page overwritten by accident has no undo the skill can offer.
+
+The flag above is the Claude Code mechanism. On a harness with no equivalent, the
+first line of `SKILL.md`'s body states the same intent in prose, so a reader knows
+what was meant even where it cannot be enforced.
+

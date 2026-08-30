@@ -1,9 +1,12 @@
 ---
 name: notion-to-notebooklm
 description: Extracts Notion pages and subpages recursively to a single concatenated Markdown file ready for NotebookLM.
+disable-model-invocation: true
 ---
 
 # Notion to NotebookLM Skill
+
+**User-invoked.** This skill reads a Notion tree with a live token and writes files to disk — start it by typing the command; nothing here fires it on its own.
 
 Extracts a Notion page and all of its subpages recursively and saves them as a single concatenated Markdown file. Supports natural language human overrides (e.g., exclusions) by translating them via LLM prior to executing the export.
 
