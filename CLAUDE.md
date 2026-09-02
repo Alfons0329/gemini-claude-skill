@@ -25,6 +25,7 @@ A personal collection of agent **skills** — packaged prompt/workflow definitio
 - `shared/scripts/` — helper scripts invoked by skills at runtime (e.g., `notion_to_markdown.py`).
 - `setup.sh` — installs the skills onto a machine (symlinks, private progress repo, personal context file). Idempotent.
 - `onboard-checklist.md` — how to adopt this skill set at any company, and where each kind of `CLAUDE.md` belongs.
+- `docs/` — cross-cutting notes that belong to no single skill (e.g. running the loop under a multiplexer).
 - `_private/` — gitignored. Personal notes and drafts. Never committed.
 
 New skills are drafted in place under `interview/` or `productivity/`; there is no separate staging directory.

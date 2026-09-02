@@ -42,8 +42,12 @@ prep skills too. The script is idempotent — safe to re-run any time.
 │   ├── notion-to-notebooklm/   # Recursive Notion markdown export & podcast prompt generator
 │   └── update-notion/          # Notion updates & sync (placeholder)
 │
-└── shared/                     # Shared runtime assets
-    └── scripts/                # Helper scripts (e.g. notion_to_markdown.py)
+├── shared/                     # Shared runtime assets
+│   └── scripts/                # Helper scripts (e.g. notion_to_markdown.py)
+│
+└── docs/                       # Notes spanning more than one skill
+    └── herdr-loop-eng-with-subagent.md   # running loop-eng under a multiplexer,
+                                          # and why stages are sessions, not subagents
 ```
 
 ## Cross-AI-Agent Compatibility
