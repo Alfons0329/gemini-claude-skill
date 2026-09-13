@@ -12,15 +12,20 @@ Seven stages, one skill. Each stage's actual procedure — what "climb the ladde
 
 | # | Stage token | Reads | Produces | Procedure |
 |---|---|---|---|---|
-| 1 | `spec` | `<id>-ticket.md` | `<id>-spec.md` | `reference/spec-create.md` |
+| 1 | `spec` | `<id>-ticket.md` | `<id>-spec.md` — **one of two producers, see below** | `reference/spec-create.md` |
 | 1b | `rca` | `<id>-ticket.md`, `<id>-spec.md` — **bug tickets only** | `<id>-rca.md` | `reference/ticket-rca.md` |
 | 2 | `impl` | `<id>-spec.md`, plus `<id>-rca.md` on a bug ticket | code in the target repo, `<id>-qa.md`, `<id>-qa-e2e.md` scaffold | `reference/ticket-impl.md` |
-| 3 | `verify` | `<id>-spec.md`, `<id>-rca.md` (bug tickets), `<id>-qa.md`, the `-qa-e2e.md` scaffold | `Result:` lines in `<id>-qa.md`, filled-in and run `<id>-qa-e2e.md`, `<id>-verify-trace.md` | `reference/ticket-verify.md` |
-| 4 | `pr-create` | `<id>-spec.md`, `<id>-qa.md`, `<id>-qa-e2e.md` | `<id>-pr.md` drafted, then the PR opened from it; tracker updates printed for the operator | `reference/pr-lifecycle.md` |
+| 3 | `verify` | `<id>-spec.md`, `<id>-rca.md` (bug tickets), `<id>-qa.md`, the `-qa-e2e.md` scaffold, and its own `<id>-qa-adv.md` on a re-run | `<id>-qa-adv.md` authored blind, `Result:` lines in both QA plans, filled-in and run `<id>-qa-e2e.md`, `<id>-verify-trace.md` | `reference/ticket-verify.md` |
+| 4 | `pr-create` | `<id>-spec.md`, `<id>-qa.md`, `<id>-qa-adv.md`, `<id>-qa-e2e.md` | `<id>-pr.md` drafted, then the PR opened from it; tracker updates printed for the operator | `reference/pr-lifecycle.md` |
 | 5 | `pr-review` | the diff, `<id>-spec.md` | inline review comments, `<id>-security-review.md` when there are findings | `reference/pr-lifecycle.md` |
-| 6 | `kb-update` | `<id>-rca.md` (bug tickets), `<id>-qa.md`, the diff | `docs/` updated in the **target** repo, on the feature branch | `reference/kb-update.md` |
+| 6 | `kb-update` | `<id>-rca.md` (bug tickets), `<id>-qa.md`, `<id>-qa-adv.md`, the diff | `docs/` updated in the **target** repo, on the feature branch | `reference/kb-update.md` |
 
 Only `spec`, `rca`, `impl`, `verify`, `pr-create`, `pr-review`, and `kb-update` are valid stage tokens. A stage may only read the artifacts named in its own row above — nothing else in a ticket directory is pipeline input (see "The artifact contract").
+
+**`<id>-spec.md` has two legitimate producers**, and every stage downstream treats them identically — the artifact is the contract, never the session that wrote it:
+
+- **The `spec` stage**, when the ticket already names an observable outcome.
+- **The operator**, when it doesn't. A ticket naming a want rather than an outcome is grilled outside this skill, by whatever method the team uses, and the result saved to `<id>-spec.md` by hand — exactly as `<id>-ticket.md` already is. `reference/spec-create.md` routes between the two and never grills on its own.
 
 ## Running it
 
@@ -66,7 +71,7 @@ Two kinds of artifact, and the difference is load-bearing:
 
 | | Artifacts | Read by a later stage? |
 |---|---|---|
-| **Drivers** | `-spec.md`, `-rca.md`, `-qa.md`, `-qa-e2e.md` | **Yes** — these are the contract; every stage row above names which ones it reads. |
+| **Drivers** | `-spec.md`, `-rca.md`, `-qa.md`, `-qa-adv.md`, `-qa-e2e.md` | **Yes** — these are the contract; every stage row above names which ones it reads. |
 | **Records** | `-progress.md`, `-verify-trace.md`, `-pr.md`, `-security-review.md` | **No** — written once, for a human to read on demand. Never loaded as pipeline input. One named exception: `impl <id> fix-sec` reads `-security-review.md`, because that record *is* the finding the invocation exists to repair (`reference/ticket-impl.md`, "Repair mode: `fix-sec`"). |
 
 A record is never a shortcut for re-deriving what a driver already says. `<id>-verify-trace.md` exists so a human can audit a triage ruling later; nothing downstream reads it — `pr-create`'s "how it was verified" comes from `<id>-qa.md`'s own `Result:` lines (a driver), not from re-opening the trace. `<id>-progress.md` is read by the operator coming back from time away, not by the next stage. Both stay short by construction: a record that grows into prose has stopped being a record and started being a second, unreliable copy of a driver.
@@ -75,9 +80,23 @@ A record is never a shortcut for re-deriving what a driver already says. `<id>-v
 
 **A ticket directory also accumulates scratch** — logs, scripts, captured bundles. Only the artifacts named in the stage table are ever read by a stage; everything else is invisible to the pipeline, and a stage that wanders into a stale log bundle is drawing conclusions from the wrong run.
 
+**The test plans are frozen against their own author.** `<id>-qa.md`, `<id>-qa-adv.md` and `<id>-qa-e2e.md` are read-only to `impl` on a `fix-qa` invocation: it changes the code until the cases pass, and adds regression tests in the target repo, but never a case's `Setup:`, `Action:` or `Expected:`. A case that is genuinely wrong is the operator's to correct, through the `## Correction log` (`reference/ticket-verify.md`). Without the freeze, the cheapest way to turn a suite green is to lower the bar it sets.
+
 **Missing or malformed input fails fast.** Never improvise a substitute, never proceed on a partial read. Name three things: which artifact is missing, the exact path it was looked for at, and the command that produces it:
 
-> `No <ticket-id>-spec.md at <resolved-path>. Run /loop-eng spec <ticket-id> first.`
+> `No <ticket-id>-qa.md at <resolved-path>. Run /loop-eng impl <ticket-id> first.`
+
+**`<id>-spec.md` names both of its producers**, because the right one depends on the ticket and sending an ambiguous ticket into `spec` only bounces it straight back out:
+
+> ```
+> No <ticket-id>-spec.md at <resolved-path>.
+>
+>   Ticket already names the observable outcome?
+>     → /loop-eng spec <ticket-id>
+>
+>   Ticket names a want, not an outcome?
+>     → grill it with your own method, save the result there, then re-run.
+> ```
 
 The same shape covers a missing `<id>-ticket.md` (produced by the operator, not a stage):
 
@@ -133,9 +152,10 @@ Applies wherever a stage's own procedure calls for a bounded retry (concretely, 
 | Cause | Retries | Escalate after | What the human is asked for |
 |---|---|---|---|
 | **Environment** (the test never reached the code) | **0** — a thousand attempts give a thousand identical failures | immediately | fix the unmet precondition — name it and its evidence |
+| **Spec gap** (the criterion for this behaviour was never written) | **0** — there is nothing to satisfy | immediately | rule on the behaviour — add an acceptance criterion, or declare a non-goal |
 | **Code bug** (the code doesn't do what the criterion says) | up to 2, each a new hypothesis | 2 attempts | judge the code — the repro, both attempts, the ranked hypothesis list |
 
-On an environment failure: don't enter a repair mode, don't edit code, don't edit a driver artifact. Report the unmet precondition and its evidence, and stop.
+On an environment failure: don't enter a repair mode, don't edit code, don't edit a driver artifact. Report the unmet precondition and its evidence, and stop. A spec gap takes the same shape for the same reason — editing code to satisfy an expectation the spec never made is inventing the requirement and implementing it in one move.
 
 On a code bug that's still failing after the budget: stop, don't spin. Report the documented repro, both attempts and why each didn't hold, and the current ranked hypothesis list. Wait for direction — anything touching a decision beyond this session's own scope is recommended and waited on, never applied unilaterally.
 
@@ -146,6 +166,7 @@ On a code bug that's still failing after the budget: stop, don't spin. Report th
 - The ticket directory resolved to exactly one path, by search, by path override, or by creation — never by guessing between candidates.
 - The stage read only the artifacts its row in "Stages" names, and failed fast (naming artifact, path, and producing command) on anything missing.
 - Nothing carried forward except what got committed — no session assumed context from an earlier one.
+- Every test plan this session did not author came out of it byte-identical — the freeze held.
 - `<id>-progress.md` gained its one or two lines.
 - Any `--human` text landed verbatim, dated, under `## Human input` in this stage's own artifact.
 - The session stopped after one stage — it did not chain into the next.

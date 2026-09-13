@@ -1,6 +1,8 @@
 # `kb-update` — write learnings back, where the team can find them
 
-Always the pipeline's last stage for a ticket (SKILL.md, "Resolving the ticket directory"). Reads `<id>-rca.md` on a bug ticket, `<id>-qa.md`, and the diff itself.
+Always the pipeline's last stage for a ticket (SKILL.md, "Resolving the ticket directory"). Reads `<id>-rca.md` on a bug ticket, `<id>-qa.md`, `<id>-qa-adv.md`, and the diff itself.
+
+**`<id>-qa-adv.md` ends with a coverage gap list** — the adversarial cases that had no counterpart in the dev plan (`reference/ticket-verify.md`). That list is this stage's cheapest input: it names, in writing, what the implementation was never asked about. One gap is a detail about this ticket; the same gap on a third ticket is a house pattern nobody has written down, and belongs in `docs/` per the scope rule below.
 
 **The knowledge base lives in the target repo's `docs/` tree, not the progress repo.** This is the deliberate counterpart to where tickets live: personal working artifacts stay out of company git; durable documentation the team needs belongs in it. Conflating the two makes each one worse.
 

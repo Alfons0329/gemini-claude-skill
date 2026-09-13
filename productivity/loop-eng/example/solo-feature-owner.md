@@ -20,6 +20,8 @@ So this walkthrough has three phases, and only the third one is the loop.
 
 Phases A and B are described here anyway, because a good phase C on badly-cut tickets is wasted effort.
 
+**Phases A and B are your grilling**, done once at feature scale rather than per ticket. `spec` refuses a ticket that names only a want (§9 Q19) — and phase B is where a want stops being one. Cut the tickets well and every one of them takes route B; cut them badly and `spec` hands each one back to you.
+
 ---
 
 ## Why this matters more when you are alone
@@ -30,12 +32,16 @@ That is the actual problem the loop solves for you. Every stage boundary stands 
 
 | Missing person | What replaces them |
 |---|---|
-| The QA engineer | `verify` writes the end-user test in a session that never saw your code (§5.2) |
+| The QA engineer who checks it works | `verify` writes the end-user test in a session that never saw your code (§5.2) |
+| The QA engineer who tries to break it | the adversarial pass — a second test plan written from the spec *before* yours is opened (§5.1a) |
 | The code reviewer | `pr-review` reads the diff on three axes, cold (§6.2) |
 | The colleague who says "did you actually run that?" | the control case (§5.5) and `verify-trace.md` |
+| The PM who says "that's not your call to make" | `## Open gaps`, and `impl` refusing to start while one is unruled (§9 Q19) |
 | The senior who asks "why did this break?" | `rca` runs before the fix, not after (§3.3) |
 
 **You cannot review your own work by trying harder.** You already know what you meant. A session that never saw you write it does not.
+
+The second row is the one people skip, and it is the one that bites. Checking that a feature works is easy when you built it — you walk the path you already had in mind. Nobody is walking the other paths, so nothing tells you they exist.
 
 ---
 
@@ -52,13 +58,13 @@ Ask an agent to list what the PRD does *not* say. That list is your real work.
  things where two engineers would build different products."
 ```
 
-**Step 2. Settle them.**
+**Step 2. Settle them.** Use whatever you settle ambiguity with — a grilling skill, an interview skill, a whiteboard. One option:
 
 ```bash
 /interview-me <path-to-prd>
 ```
 
-This is what `interview-me` is for: ambiguity where different people would choose differently. It asks, you answer, and the answers get written into the document.
+What matters is not the tool but the property: something asks, you answer, and **the answers land in the document** rather than in your memory of the conversation. An ambiguity you resolved but did not write down is one you will resolve differently next month.
 
 Do this **before** any epic exists. Changing your mind is free here and expensive later.
 
@@ -144,9 +150,10 @@ Writing "out of scope" here is worth the thirty seconds. It is what stops one ti
 /loop-eng spec YT-11
 ```
 
-Out comes `yt-11-spec.md`:
+Out comes `yt-11-spec.md`, in four sections:
 
 ```
+## Acceptance criteria
 AC-1  Given a creator selects a valid video file
       When they confirm the upload
       Then the file is stored and an ID is returned
@@ -154,9 +161,30 @@ AC-1  Given a creator selects a valid video file
 AC-2  Given a file larger than the size limit
       When they confirm the upload
       Then it is rejected before any bytes are stored
+
+## Non-goals
+- Transcoding (YT-12), thumbnails (YT-13).
+- Resumable upload. Interrupted means re-upload.
+
+## Open gaps
+[GAP-1] What is the size limit?               Status: awaiting <decider>
+  Scenario:   a creator picks a 4GB raw camera file
+  Not ours:   drives storage cost and what we can promise creators
+  Options:    A 2GB (covers phone footage, cheap)
+              B 20GB (covers camera originals, ~8x the bill)
+  Recommend:  A for launch, revisit on the first complaint
 ```
 
 Four criteria, say. Right-sized. Move on.
+
+**`## Non-goals` is the same "out of scope" line you wrote in the ticket, now somewhere a machine reads it.** `verify` presses your criteria to their limit and drops any case that cites neither a criterion nor a non-goal — so this section is what stops a fresh session asking you about resumable upload on every single run.
+
+**`## Open gaps` is the awkward one when you are alone**, and worth thinking through once rather than every ticket:
+
+- **There is usually still a decider** — a founder, a PM, a design partner, the customer who asked for this. Send them the gap. The format exists so they can rule in a minute.
+- **When there genuinely isn't one, `Not ours:` is the test.** If you cannot honestly write down why this is not your call, it is your call. Make it, record it as a criterion or a non-goal, and park nothing.
+
+What you must not do is leave it blank and decide it silently in code. `impl` will not start while a gap is open — and alone, that refusal is the only thing standing between "I picked 2GB" and "2GB is what the product promises.
 
 **Session 2 — impl.**
 
@@ -176,13 +204,23 @@ It will stop once to confirm a seam. That is the one place it waits (§9 Q7).
 /loop-eng verify YT-11
 ```
 
-A fresh session. It never saw you write the code.
+A fresh session. It never saw you write the code — and before it opens your test plan, it writes its own.
 
-It runs a **control case** first — an old test, untouched by your change. Green means your machine is fine. Red means stop, the environment is broken, and nothing below is evidence.
+That ordering is the whole point. `yt-11-qa.md` is *your* list of what is worth checking, so reading it first would hand the fresh session your blind spots. Instead it reads only the spec and writes `yt-11-qa-adv.md`: the boundary cases, the concurrent ones, the dependency-down ones, and one question per criterion — *what assumption, if false, makes this return a plausible wrong answer instead of an error?*
 
-Then it writes the real end-user test itself and runs it. It is allowed to disagree with you, and it does not know what you were hoping would pass.
+Then three passes, in order:
 
-**When it fails, it does not assume your code is wrong.** It rules between a broken machine and a broken change, and writes the evidence to `yt-11-verify-trace.md`. Two retries on a code bug. Zero on a broken machine — you go fix the machine.
+| Pass | What runs | Who wrote it |
+|---|---|---|
+| **dev** | `yt-11-qa.md` at the seam | you, via `impl` |
+| **adversarial** | `yt-11-qa-adv.md`, same seam | the fresh session, blind |
+| **E2E** | `yt-11-qa-e2e.md`, the real client | the fresh session, blind |
+
+A **control case** runs before all of them — an old test, untouched by your change. Green means your machine is fine. Red means stop, the environment is broken, and nothing below is evidence.
+
+**The adversarial pass reports a coverage gap even when everything is green:** the cases it thought of that yours did not contain. Alone, that list is the closest thing you have to a colleague reading your test plan and raising an eyebrow. Five criteria might give you five cases and it twelve — the seven-case difference is the part nobody was ever going to mention to you.
+
+**When something fails, it does not assume your code is wrong.** It rules between a broken machine, a broken change, and *a behaviour nobody ever decided* — that last one is a **spec gap**, and it goes back to you as a decision, not into a fix loop. Evidence lands in `yt-11-verify-trace.md`. Two retries on a code bug. Zero on a broken machine or a spec gap.
 
 **Session 4 — pr-create.**
 
@@ -190,9 +228,9 @@ Then it writes the real end-user test itself and runs it. It is allowed to disag
 /loop-eng pr-create YT-11
 ```
 
-Drafts `yt-11-pr.md`, then opens the PR from it. TL;DR at the top, criteria pasted in full.
+Drafts `yt-11-pr.md`, then opens the PR from it. TL;DR at the top, criteria pasted in full, and the three case counts reported separately — *"5 dev, 12 adversarial, 4 end-user"* — rather than added together.
 
-Alone, the PR body is not paperwork — it is the only written record of what you meant, six months from now.
+Alone, the PR body is not paperwork — it is the only written record of what you meant, six months from now. The split counts are part of that: they say the change was pushed on, not merely walked through.
 
 **Session 5 — pr-review.**
 
@@ -228,7 +266,7 @@ Ticket 1 is slow. Ticket 8 is not.
 
 ---
 
-## Four traps in this mode
+## Five traps in this mode
 
 **1. Component epics.** "The storage layer" can be finished while nobody can upload anything. Cut along what a user can do.
 
@@ -236,7 +274,9 @@ Ticket 1 is slow. Ticket 8 is not.
 
 **3. Skipping `verify` because you already know it works.** You are the only person who thinks so. That is the problem, not the reassurance.
 
-**4. Ten tickets in flight.** Owning the whole feature does not mean building it all at once. One ticket, one loop. The epic tracker exists so you can see progress without holding it all in your head.
+**4. Deciding a gap in your head because you are also the PM.** The most natural move in this mode, and the most expensive. Wearing both hats does not merge them: you still made a product decision, you just left no record that you made one. Six months later nobody — including you — can tell a considered trade-off from a default you never noticed choosing. Write it in `## Open gaps` with the options and your recommendation, rule on it in the same sitting if there is nobody to send it to, and move. It costs a minute.
+
+**5. Ten tickets in flight.** Owning the whole feature does not mean building it all at once. One ticket, one loop. The epic tracker exists so you can see progress without holding it all in your head.
 
 ---
 
@@ -245,5 +285,8 @@ Ticket 1 is slow. Ticket 8 is not.
 | File | What it holds |
 |---|---|
 | `../README.md` | the other walkthrough — joining an existing team |
+| `file-upload-walkthrough.md` | one vague ticket in close-up, including what to do when each stage refuses |
+| `../SPEC.md` §5.1a | why the adversarial pass exists, and what it still cannot catch |
+| `../SPEC.md` §9 Q19 | the two spec routes, and why `impl` refuses to start on an open gap |
 | `../SPEC.md` | the full design and the reasoning behind it |
-| `../../interview-me/SKILL.md` | the PRD phase — settling ambiguity before anything is built |
+| `../../interview-me/SKILL.md` | one option for the PRD phase — settling ambiguity before anything is built |

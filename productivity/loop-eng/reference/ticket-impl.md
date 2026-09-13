@@ -2,6 +2,19 @@
 
 Reads `<id>-spec.md`, and `<id>-rca.md` too on a bug ticket. On a bug ticket the **confirmed mechanism is the RCA's, not the spec's suspicion**, and any criteria under its *Fix verification tied to this RCA* section bind exactly as the spec's own acceptance criteria do.
 
+## The gate: every open gap is closed first
+
+**Before the ladder, before any code**, read `<id>-spec.md`'s `## Open gaps`. Every entry must carry a ruling. Any entry still open stops this stage in the fail-fast shape SKILL.md defines — nothing is written, no rung is climbed:
+
+```
+GAP-2 still open in <ticket-id>-spec.md: "<the one-line title>"
+Close it with the decider, then record the ruling in ## Open gaps and re-run.
+```
+
+A gap is parked precisely because it is somebody else's call — a product rule, a legal constraint, a cross-team trade-off. Building past one means guessing at that call and burying the guess in code, where it looks like a decision somebody made. The cost of stopping is a message; the cost of guessing is a rewrite after launch.
+
+**This gate is `impl`'s alone.** `rca` runs unblocked: root-causing needs no ruling, and what it turns up is often exactly the evidence that closes a gap.
+
 ## Before writing any code: climb the ladder
 
 Understand the problem and trace the real flow first, then take the first rung that holds and stop:
@@ -55,6 +68,8 @@ Commit code and both artifacts to the target repo's feature branch when done, th
 
 Entered as `/loop-eng impl <id> fix-qa`, only from `verify`'s classification of a failure as a **code bug** (`reference/ticket-verify.md`, "Triaging a failure") — never for an environment failure or a bad QA case, and never after a PR is already open (SKILL.md, "Repair-mode scope").
 
+**The test plans are frozen here** — SKILL.md, "The artifact contract." Change the code until the cases pass and add regression tests in the target repo; the three QA plans come out of this session byte-identical. A case that is genuinely wrong is the operator's to correct through the `## Correction log`, which is also the record of why it moved.
+
 `verify` already built the tight, discriminating repro and handed it forward. This mode runs the rest of the diagnosis, bounded at **2 attempts** (SKILL.md, "Escalation"):
 
 1. Read the repro `verify` documented and the ranked hypothesis list it produced.
@@ -68,9 +83,10 @@ Entered as `/loop-eng impl <id> fix-sec`, only from a `pr-review` security-gate 
 
 ## Done when
 
+- `## Open gaps` carried a ruling on every entry before the first rung was climbed.
 - The ladder was climbed and the rung actually stopped at is named, even if it's rung 7.
 - Any deliberate shortcut carries a `ponytail:` comment naming the ceiling.
 - The seam list was confirmed with the operator before the first test was written.
 - `<id>-qa.md` has one case per acceptance criterion, a checkable `## Test Environment` with a named control case, and an empty `## Correction log`.
 - `<id>-qa-e2e.md` names a flow, not steps or assertions.
-- On `fix-qa`, the attempt count never exceeds 2, and escalation happened exactly at the cap, not before or after.
+- On `fix-qa`, the attempt count never exceeds 2, escalation happened exactly at the cap, and all three QA plans are unchanged.

@@ -4,7 +4,7 @@ Two stage tokens, one file, because they're two ends of the same artifact: the P
 
 ## `pr-create`
 
-Reads `<id>-spec.md`, `<id>-qa.md`, `<id>-qa-e2e.md`.
+Reads `<id>-spec.md`, `<id>-qa.md`, `<id>-qa-adv.md`, `<id>-qa-e2e.md`.
 
 1. **Draft `<id>-pr.md` before opening anything** — the body is read while it's still cheap to change, and the file stays in the ticket directory afterward as the record of what was claimed:
 
@@ -23,7 +23,7 @@ Reads `<id>-spec.md`, `<id>-qa.md`, `<id>-qa-e2e.md`.
    ```
 
 2. **Paste acceptance criteria verbatim, never summarized.** The spec lives in the progress repo, which no reviewer can open — the PR body is the only place the intended behavior appears to them. A summary would also break `pr-review`'s spec axis below, which quotes spec lines a reviewer must be able to check against the real wording.
-3. **`## How it was verified` is drawn from `<id>-qa.md`'s `Result:` lines and `<id>-qa-e2e.md`'s run results** — both drivers this stage already has open. If `verify` was skipped under its documented-skip escape hatch (`reference/ticket-verify.md`), state that plainly here instead, with the reason — the one condition on that skip is that it's never silent, and this section is where it stops being silent.
+3. **`## How it was verified` is drawn from the `Result:` lines of all three QA plans** — `<id>-qa.md`, `<id>-qa-adv.md` and `<id>-qa-e2e.md`, drivers this stage already has open. Name the adversarial pass separately rather than folding it into a total: *"8 dev cases, 14 adversarial cases, 6 end-user cases"* tells a reviewer the change was pushed on, where a single number does not. Any case recorded `not run` is reported as such, never counted as a pass. If `verify` was skipped under its documented-skip escape hatch (`reference/ticket-verify.md`), state that plainly here instead, with the reason — the one condition on that skip is that it's never silent, and this section is where it stops being silent.
 4. **Open the PR from the drafted body** once it reads the way it should. Use whatever the project context file documents for opening a PR against this repo's host. **If it documents nothing**, don't guess a host or CLI — ask the operator once which tool to use, the same way `reference/ticket-impl.md` asks once for an undocumented test command rather than guessing a runner.
 5. **Never touch the tracker.** Print the updates the operator should make and stop:
 

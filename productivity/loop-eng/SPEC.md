@@ -26,13 +26,20 @@ Every decision below was run in anger for ~3 months on real tickets before being
 
 - **`verify` authors the E2E test, not `impl`** (§5.2) — costs an extra cold session; the payoff is that the test can't inherit the implementer's blind spots.
 - **A failing test is triaged, never assumed** (§5.5) — the obvious design routes every red test into a code fix, which is precisely how a correct implementation gets edited until it satisfies a typo, or until it satisfies a test that never ran at all.
+- **`verify` writes its own test plan before it reads `impl`'s** (§5.1a) — added after the fact, when a shipped loop turned out to be running a plan authored by the session it exists to check. Costs one more artifact; the payoff is that a missing case is now visible as a coverage gap instead of invisible as a green.
 
 ## 3. Pipeline Overview
 
 ```
-Story: SPEC ─────────> IMPL ──> VERIFY ──> PR-CREATE ──> PR-REVIEW (security-gated) ──> UPDATE-KB
-Bug:   SPEC ──> RCA ──> IMPL ──> VERIFY ──> PR-CREATE ──> PR-REVIEW (security-gated) ──> UPDATE-KB
+                    ┌─ ticket names an outcome ──> SPEC ─┐
+Story:  <id>-ticket ─┤                                    ├─> IMPL ──> VERIFY ──> PR-CREATE ──> PR-REVIEW (security-gated) ──> UPDATE-KB
+                    └─ ticket names a want ──> grilled ──┘            (gap gate)
+                       outside this skill
+
+Bug:    same, plus RCA between SPEC and IMPL
 ```
+
+**`<id>-spec.md` has two producers** (§9 Q19). The `spec` stage writes it when the ticket already names an observable outcome; the operator writes it, grilled by whatever method the team uses, when the ticket names only a want. Every stage downstream treats the two identically — the artifact is the contract, never the session that wrote it. `IMPL` refuses to start while any `## Open gaps` entry is unruled, whichever producer wrote the file.
 
 | # | Stage | Stage token | What it does |
 |---|---|---|---|
@@ -53,7 +60,10 @@ All seven are stages of **one skill**, not seven skills — see §7.1. Each runs
 Each stage runs in its **own fresh session**. The only thing that crosses the boundary is whatever got committed to git — no session inherits another's reasoning or context. This is deliberate, not incidental: it's what makes the `verify` stage's end-user pass trustworthy (§5.2) — it can't inherit `impl`'s blind spots if it never saw `impl`'s session in the first place.
 
 ```
-You (boss) → save the ticket text to <id>-ticket.md → /loop-eng spec
+You (boss) → save the ticket text to <id>-ticket.md
+                                      ↓
+        ticket names an outcome → /loop-eng spec
+        ticket names a want     → grill it yourself, outside this skill  (Q19)
                                       ↓
                        <id>-spec.md committed to the progress repo
                                       ↓
@@ -78,10 +88,11 @@ This is the rule the whole design rests on. A session that ran `impl` cannot be 
 | Session | Reads | Produces |
 |---|---|---|
 | 0 — *the operator* | the tracker | `<id>-ticket.md` — pasted by hand, before any stage (Q10) |
-| 1 — `spec` | `<id>-ticket.md` | `<id>-spec.md` — numbered `Given/When/Then` acceptance criteria + evidence index + open questions (Q1) |
+| 1 — `spec` *(route B)* | `<id>-ticket.md` | `<id>-spec.md` — numbered `Given/When/Then` acceptance criteria + non-goals + open gaps + evidence index (Q1, Q19) |
+| 1 — *the operator* *(route A)* | the ticket, grilled outside this skill | the same `<id>-spec.md`, same four sections (Q19) |
 | 1b — `rca` *(bug tickets only)* | `<id>-ticket.md`, `<id>-spec.md` | `<id>-rca.md` — root cause, escape analysis, extra acceptance criteria the analysis demands (§3.3) |
 | 2 — `impl` | `<id>-spec.md`, `<id>-rca.md` | code in the target repo + `<id>-qa.md` (dev test plan) + `<id>-qa-e2e.md` (bare scaffold, §4) |
-| 3 — `verify` | `<id>-spec.md`, `<id>-qa.md`, scaffold | `<id>-qa.md` with `Result:` lines + `<id>-qa-e2e.md` authored and run (§5.2) + `<id>-verify-trace.md` (Q15) |
+| 3 — `verify` | `<id>-spec.md`, `<id>-qa.md`, scaffold | `<id>-qa-adv.md` authored blind (§5.1a) + `Result:` lines in both seam plans + `<id>-qa-e2e.md` authored and run (§5.2) + `<id>-verify-trace.md` (Q15) |
 | 4 — `pr-create` | `<id>-spec.md`, `<id>-verify-trace.md` | `<id>-pr.md` drafted, then the PR opened from it; tracker updates printed for the operator (Q6) |
 | 5 — `pr-review` | the diff, `<id>-spec.md` | inline review comments + `<id>-security-review.md` when there are findings (§6.1) |
 | 6 — `kb-update` | `<id>-rca.md`, `<id>-verify-trace.md` | `docs/` updated in the **target** repo, on the feature branch (Q5) |
@@ -97,7 +108,7 @@ Filenames follow `<ticket-id-lowercase>-<artifact>.md` throughout, and **stages 
 
 | | Artifacts | Read by a later stage |
 |---|---|---|
-| **Drivers** | `-spec.md`, `-rca.md`, `-qa.md`, `-qa-e2e.md` | yes — they are the contract |
+| **Drivers** | `-spec.md`, `-rca.md`, `-qa.md`, `-qa-adv.md`, `-qa-e2e.md` | yes — they are the contract |
 | **Records** | `-progress.md`, `-verify-trace.md`, `-pr.md`, `-security-review.md` | no — written once, read by a human |
 
 **A record is never loaded as pipeline input.** `verify-trace.md` exists so a human can audit a triage ruling months later; nothing downstream reads it, and a stage that pulled it in would be spending a large file's worth of context to learn what `qa.md`'s `Result:` lines already say. The same holds for `progress.md`, which is read by *you* returning from a week off, not by the next session.
@@ -124,7 +135,10 @@ modes:   fix-qa | fix-sec          (impl only — §5.5)
 **Before the first stage**, save the ticket text to `<id>-ticket.md` in the ticket directory (Q10). Every stage after that is invoked by you, **each in a fresh session**:
 
 ```bash
-# Session 1 — generate the spec from the ticket
+# Session 1 — generate the spec from the ticket.
+# Route B only: the ticket already names an observable outcome.
+# A ticket naming only a want is grilled outside this skill and saved
+# to <id>-spec.md by hand — same four sections (Q19).
 /loop-eng spec <TICKET-ID>
 
 # Optional — align on ambiguities before implementing
@@ -252,6 +266,28 @@ One test perspective isn't enough, because the two catch different failure class
 
 A real user only ever exercises the second one. Shipping on the first alone is checking the contract, not the product.
 
+### 5.1a Why the dev pass needs its own adversary
+
+The E2E pass has had an independent author since §5.2. The dev pass never did, and that is the larger hole, because `<id>-qa.md` is written by the session that wrote the code.
+
+A worked failure, from practice. An implementer believes a particular dereference is harmless. It reads the spec correctly, implements it correctly, and writes one case per acceptance criterion — none of which mentions that dereference, because it never occurred to the author that it could fail. `verify` runs the plan. Every case is green. The defect ships, and the pipeline's own record says it was verified.
+
+Nothing in the loop as it stood catches this. `verify` may write `Result:` lines and nothing else — it cannot add a case — and no step compares what the spec promises against what the plan actually exercises. The blind spot is inherited whole, and the green is indistinguishable from a real one.
+
+It is also a cascade rather than one gap. `spec` was free to write only the happy path; `impl` writes one case per criterion, so coverage is exactly as thin as the spec; `verify` runs what it is handed. Three stages, each locally correct, composing into a pass that proves nothing.
+
+**So `verify` writes a second plan, `<id>-qa-adv.md`, before it opens `impl`'s.** The separating line is not the code — code only names the shape of the seam, and a case that cannot name the endpoint cannot call it. The line is `impl`'s *test plan*, which encodes what the builder thought was worth checking; reading it first anchors the adversary on exactly the judgement it exists to second-guess. Hence the two layers in `reference/ticket-verify.md`: intent from the spec alone, committed; then executable form, with the code open and the intents frozen.
+
+**Alternatives rejected:**
+
+| Rejected | Why |
+|---|---|
+| `verify` appends adversarial cases to `<id>-qa.md` | No new file, but the blindness becomes unenforceable — the pre-flight's control case lives in that file, so it is open before authoring begins. It also breaks the ownership rule that makes the `## Correction log` audit trail readable. |
+| Put them in `<id>-verify-trace.md` | A record, never a driver (§3.1). `fix-qa` would then have to read a record to learn what failed. |
+| An eighth stage, in its own session | Structurally stronger, and the honest cost is that it doubles the most-run stage. §5.2's E2E rule already runs on in-session ordering; this matches that bar rather than inventing a stricter one the design cannot enforce elsewhere. |
+
+**Two limits, stated rather than papered over.** The blindness is ordering, not isolation — a session that decided to peek could. And no adversary catches business logic that is wrong in the spec: if the spec says 10% and the rule was 15%, the code, the cases, and the adversary are all wrong together, in agreement. That one is the human's, which is what §7.1's layering has always assumed.
+
 ### 5.2 Ownership split — why `verify` authors the E2E test, not `impl`
 
 The `impl` stage is not trusted to decide what "correct from a user's perspective" means, because it can unconsciously write an E2E test shaped around what it already knows will pass — the same blind spot code review avoids by never letting one axis see the other's reasoning (§6). So authorship of the real E2E test is split from authorship of the code:
@@ -272,10 +308,20 @@ The returned text lands verbatim in the artifact (§7.2), so the next session ha
 
 ### 5.3 Sequencing within `verify`
 
-`verify` does not report VERIFY as passed until **both** passes are green, in this order:
+`verify` does not report VERIFY as passed until **all three** passes are green, in this order:
 
+0. **Author the adversarial cases** — before anything else, including the pre-flight, because the pre-flight's control case lives inside `<ticket-id>-qa.md` (§5.1a).
 1. **Dev pass** — run `<ticket-id>-qa.md` (produced by `impl`, §4) against the local stack. Fast feedback first.
-2. **E2E pass** — only once the dev pass is green, write the real steps into `<ticket-id>-qa-e2e.md` per §5.2 and run them (or hand the manual checklist to the boss).
+2. **Adversarial pass** — run `<ticket-id>-qa-adv.md` at the same seam, then record which of its cases had no counterpart in the dev plan. That coverage gap is worth writing down even when everything passes: it is the list of what the implementation was never asked about.
+3. **E2E pass** — only once both seam-level passes are green, write the real steps into `<ticket-id>-qa-e2e.md` per §5.2 and run them (or hand the manual checklist to the boss).
+
+The three plans divide along two axes, and the new one is not a third concept — it shares a layer with `impl`'s plan and an author with the end-user plan:
+
+| | Layer | Author |
+|---|---|---|
+| `-qa.md` | the seam | `impl` |
+| `-qa-adv.md` | the seam | `verify`, blind |
+| `-qa-e2e.md` | the real client | `verify`, blind |
 
 Both passes write their evidence to `<ticket-id>-verify-trace.md` as they run — each case, the command, the output, and the acceptance criterion it maps to, plus the control case and its verdict (Q15). §5.5 asks this stage to rule between a broken environment and broken code; a ruling with no record behind it can be believed but not reviewed.
 
@@ -317,11 +363,14 @@ Also confirm the control case can still **fail** — a suite that cannot go red 
 | Failure type | What it means | Who fixes it | How |
 |---|---|---|---|
 | **Environment** | The test never reached the code — the control case fails too | you (human) | fix the unmet precondition. **Zero retries** — never enter `fix-qa` (§5.6) |
-| **Code bug** | The implementation doesn't do what the acceptance criterion says | the impl session | route back: `/loop-eng impl <id> fix-qa` (bounded — §5.6) |
+| **Code bug** | The implementation doesn't do what an **existing** acceptance criterion says | the impl session | route back: `/loop-eng impl <id> fix-qa` (bounded — §5.6) |
+| **Spec gap** | The case presses behaviour the spec never decided | you (human) | rule on it: add an acceptance criterion, or write it into `## Non-goals`. **Zero retries** |
 | **Wrong assertion** | The `Expected:` value in the QA case is itself incorrect | you (human) | edit `Expected:` in the case, add a `## Correction log` row, re-run `verify` |
 | **Wrong test step** | The `Setup:` or `Action:` block is incorrect — the impl session wrote the test wrong | you (human) | edit the `Setup:`/`Action:` block, add a `## Correction log` row, re-run `verify` |
 
-> **The rule:** `fix-qa` means *"the code is wrong."* Editing the QA doc means *"the doc is wrong."* Never use `fix-qa` to paper over a bad assertion or a bad test step — that silently rewrites working code to satisfy a typo.
+> **The rule:** `fix-qa` means *"the code is wrong."* Editing the QA doc means *"the doc is wrong."* Ruling on a spec gap means *"nobody had decided yet."* Never use `fix-qa` to paper over a bad assertion, a bad test step, or an undecided behaviour — the first two silently rewrite working code to satisfy a typo, and the third invents a requirement and implements it in the same breath, leaving no record that either happened.
+
+**Spec gap is the row the adversarial pass adds**, and the one question that separates it from a code bug is whether a criterion exists that the behaviour violates. Both of its exits write into the spec, and both close permanently: a new criterion is tested from then on, and a non-goal is dropped at authoring by the adversary's scope guard rather than re-raised by every future cold session. This matters because each `verify` is a fresh session with no memory — a refusal that lives only in the operator's head gets re-litigated forever, which is the one way this loop could fail to terminate.
 
 **Who writes what in `qa.md`** — the two halves have different owners, and mixing them destroys the audit trail:
 
@@ -345,6 +394,7 @@ A future reader then sees both the original expectation and why it moved, instea
 | Cause | Retries that help | Escalate after | What the human is asked for |
 |---|---|---|---|
 | **Environment** | **0** — a thousand attempts give a thousand identical failures | immediately | "Precondition X unmet: `<evidence>`" — fix the machine |
+| **Spec gap** | **0** — there is nothing to satisfy | immediately | a ruling — a new acceptance criterion, or a non-goal |
 | **Code bug** | up to 2 — each is a new hypothesis | 2 attempts | the repro, both attempts, the ranked hypothesis list |
 
 Both cap far below "keep trying," for opposite reasons: retrying a broken environment cannot produce new information, while retrying a code bug past two attempts stops being hypothesis-driven and becomes guessing. The human is also being asked for two different things — repair their machine versus judge the code — so collapsing both into one "escalate" wastes the escalation.
@@ -467,10 +517,10 @@ Three rules make it safe:
 **Rules that bind every file below**, resolved in §9 and not restated per item: filenames are `<ticket-id-lowercase>-<artifact>.md` and only the named artifacts are ever read (Q16); a missing or malformed input fails fast naming the artifact, the path searched, and the command that produces it (Q8); a stage waits only for an answer given in seconds and otherwise exits with instructions for returning results (Q7/Q9); every stage appends one or two lines to `<id>-progress.md` (Q15); no stage triggers another (§3.1).
 
 - [ ] Write `SKILL.md` — frontmatter (`name`, `description`, `disable-model-invocation: true` per Q14), the stage dispatch table, argument grammar including `[mode]` and `--human` (§3.2), ticket-directory resolution by search with the `/`-means-path override (Q13), the one-stage-per-invocation rule (§3.1), the artifact contract and filename convention (§3.1, Q16), the `CLAUDE.md` read and its fallback (§7.1), `--human` handling including dated append (§7.2), the wait-or-exit rule (Q7/Q9), and escalation (§5.6). **Contains no stage-specific procedure** — those live in `reference/`.
-- [ ] Write `reference/spec-create.md` — reads `<id>-ticket.md` and fails fast if absent (Q10); delegates to `interview-me` for the interview mechanics; produces numbered `Given/When/Then` acceptance criteria and the evidence index (Q1). Reads a parent epic AC tracker for context if one is present (Q17).
+- [ ] Write `reference/spec-create.md` — reads `<id>-ticket.md` and fails fast if absent (Q10); **routes between the two producers first and never grills on its own** (Q19); delegates the interview mechanics to whatever skill the team uses; produces numbered `Given/When/Then` acceptance criteria, `## Non-goals`, `## Open gaps` (each carrying options, why it isn't engineering's call, and a recommendation), and the evidence index (Q1, Q19). Reads a parent epic AC tracker for context if one is present (Q17).
 - [ ] Write `reference/ticket-rca.md` implementing §3.3 — no-op on non-bug tickets, the three-part output in its fixed order, the *Fix verification tied to this RCA* section, and the stop-and-report gate when the spec's root-cause claim fails verification against the code (Q10).
-- [ ] Write `reference/ticket-impl.md` implementing §4 — the ladder first, then the TDD discipline, the `ponytail:` shortcut marker, both QA artifacts (`-qa.md` with checkable `## Test Environment` preconditions, a named control case, and an empty `## Correction log`; plus the `-qa-e2e.md` scaffold), the seam confirmation as the one blocking checkpoint (Q7), and the `fix-qa` / `fix-sec` repair modes.
-- [ ] Write `reference/ticket-verify.md` implementing: the §5.5 environment pre-flight, its control-case discriminator and the first-ticket fallback with its *pre-flight unavailable* announcement (Q12), independent E2E authorship (§5.2), dev-pass-then-e2e-pass sequencing and the documented-skip escape hatch (§5.3), six-phase diagnosis (§5.4), the four-way failure triage and `## Correction log` ownership (§5.5), `<id>-verify-trace.md` as the evidence record (Q15), the exit-and-be-re-invoked handoff on the manual checklist path (Q9), and both retry budgets — zero for environment, two for a code bug (§5.6).
+- [ ] Write `reference/ticket-impl.md` implementing §4 — the ladder first, then the TDD discipline, the `ponytail:` shortcut marker, both QA artifacts (`-qa.md` with checkable `## Test Environment` preconditions, a named control case, and an empty `## Correction log`; plus the `-qa-e2e.md` scaffold), the seam confirmation as the one blocking checkpoint (Q7), **the `## Open gaps` gate that refuses to start while any entry is unruled** (Q19), and the `fix-qa` / `fix-sec` repair modes with the QA plans frozen against this session (Q18).
+- [ ] Write `reference/ticket-verify.md` implementing: **blind two-layer authorship of `<id>-qa-adv.md` before anything else, its five buckets, the per-criterion silent-wrong question, independent `Expected:` sources, the scope guard, and the stale-file rule** (§5.1a, Q18); the §5.5 environment pre-flight, its control-case discriminator and the first-ticket fallback with its *pre-flight unavailable* announcement (Q12); independent E2E authorship (§5.2); **three-pass sequencing with the coverage gap list** and the documented-skip escape hatch (§5.3); six-phase diagnosis (§5.4); the **five-way** failure triage and `## Correction log` ownership (§5.5); `<id>-verify-trace.md` as the evidence record, recording per case whether it reached a real seam or a double (Q15, Q18); the exit-and-be-re-invoked handoff on the manual checklist path (Q9); and all three retry budgets — zero for environment, zero for a spec gap, two for a code bug (§5.6).
 - [ ] Write `reference/pr-lifecycle.md` with `pr-create` drafting `<id>-pr.md` (TL;DR, what changed, why, acceptance criteria pasted verbatim, how verified, deliberately skipped) then opening the PR from it and printing tracker updates rather than performing them (Q6), plus the one coarse line appended to a parent epic tracker when one exists (Q17); and `pr-review` implementing the §6.1 security gate (blocking, writes `-security-review.md`, repairs via `fix-sec`) followed by §6.2's three-axis parallel-subagent review.
 - [ ] Write `reference/kb-update.md` — Q5: scope picks `docs/shared/` or `docs/project/<slug>/` in the **target** repo, written on the feature branch so it reaches the team through PR review; the proper-noun graduation test routing method improvements out to the kernel instead; and harvesting `ponytail:` markers into a ledger under `docs/shared/`.
 - [ ] Update `NOTICE.md` crediting `mattpocock/skills` (MIT) for §4 and §6, and `dietrichgebert/ponytail` (MIT) for the ladder in §4 and the deletion axis in §6.2.
@@ -481,6 +531,37 @@ Three rules make it safe:
 **All closed.** Every question below is resolved and folded into the sections it affects; nothing here blocks writing `SKILL.md`. Resolved items keep their number rather than being deleted — other documents cite them, and the reasoning behind a decision is worth more than the decision alone when someone later wants to change it.
 
 Q15, Q16 and Q17 were opened *during* the closing pass, from evidence about how the pipeline is actually run: two artifact types in daily use that this document had never named, a filename convention it had left implicit, and a parent-epic level it did not know existed.
+
+Q18 and Q19 were opened later still, after the skill had shipped, from a single observation: `verify` was running a test plan written by the session it exists to check.
+
+### Reopened after shipping
+
+**Q18 — `verify` inherits `impl`'s blind spots through `<id>-qa.md`. What closes that?** — **RESOLVED.** A second plan, `<id>-qa-adv.md`, authored by `verify` from the spec before it opens `impl`'s. The full argument, the worked failure, the two-layer authoring line, and the three rejected alternatives are in §5.1a; the procedure is in `reference/ticket-verify.md`.
+
+Four decisions inside it are worth keeping separately, because each was a live choice:
+
+1. **It runs on every `verify`.** A per-pass opt-out was rejected: the guard that can be skipped is the guard that is skipped, and this one guards the exact failure the question was about. The existing whole-stage escape hatch (§5.3) still covers changes that warrant no verification at all — there is no partial skip.
+2. **Generating a case is not enough to fail it.** Every `Expected:` comes from the spec, a known-good literal, or a worked example — never from running the code and recording the output. `reference/ticket-impl.md` already barred that tautology for `<id>-qa.md`; it simply had never been carried across to a file that did not yet exist. Without it the adversary writes cases that agree with the implementation by construction, which is worse than writing none, because they look like coverage.
+3. **A fixed list of buckets is itself a blind spot**, so each acceptance criterion also gets one generative question: what assumption, if false, makes this produce a *silently wrong* answer rather than an error? Loud failures get found; a plausible wrong value ships.
+4. **Re-runs reuse the file; a stale file is re-authored in full.** A session returning from `fix-qa` has already seen everything, so regenerating would contaminate the list — but a spec that gained a criterion (which is exactly what closing a spec gap produces) leaves the file covering less than the contract, and an untested new criterion with a green screen is the same silent pass all over again. The header records which criteria the file was written against, which makes staleness checkable rather than remembered.
+
+Two limits are stated in §5.1a rather than designed around: the blindness is ordering rather than isolation, and no adversary catches a business rule that is wrong in the spec itself.
+
+**Q19 — Where does an ambiguous ticket get its spec, and what stops `impl` building on an undecided one?** — **RESOLVED.** Two producers for `<id>-spec.md`, two new required sections, and one gate.
+
+**`spec` routes; it never grills.** A ticket naming an observable outcome goes through the stage. A ticket naming only a want is grilled outside this skill and the result saved to `<id>-spec.md` by hand — exactly as `<id>-ticket.md` already is. Downstream stages cannot tell the two apart and must not need to: the artifact is the contract, never the session that wrote it.
+
+**Dropping the `spec` stage entirely was rejected.** It was the obvious reading of the problem — if the stage cannot grill, why keep it — but it charges every well-scoped ticket ("upload fails above 2GB") a full grilling session it does not need. Two routes get the same result at no cost to the clear case.
+
+**Why the stage must not grill.** Arguing a human out of a vague requirement is a conversation, not a procedure, and the method belongs to the team — some bring a grilling skill, some an interview skill, some a whiteboard. Fixing one inside the kernel would make it non-portable for exactly the reason §7.1 keeps company facts out. What the pipeline fixes is the *shape* of the answer.
+
+**`## Non-goals` (required, `none` valid).** Two jobs. It brakes the adversary's scope — without it, a hand-run script gets pressed against distributed-systems assumptions. And it distinguishes *decided against* from *never considered*, which today are both silence. It is also the only terminating write in the loop's one otherwise-unbounded cycle: every `verify` is a fresh session, so a refusal that lives only in the operator's head is re-litigated on every run, while a non-goal is dropped at authoring by the scope guard and never raised again.
+
+**`## Open gaps` (required, `none` valid).** The parked-question mechanism: what this ticket cannot settle alone — a product rule, a legal constraint, a cross-team trade-off — so the interview keeps moving rather than stalling. **Every entry carries options, why it is not engineering's call, and a recommended option; an entry missing either of the last two is not a gap.** Handing a decider a bare question outsources the thinking along with the decision and costs days while they invent the options; handing them a recommendation costs a minute to agree or overrule. And a gap whose "why this isn't ours" cannot be written honestly is a decision the engineer can make — so make it, record it as a criterion or a non-goal, and park nothing.
+
+**The gate belongs to `impl`, not `rca`.** `impl` refuses to start while any entry is unruled: building past a parked gap means guessing at somebody else's call and burying the guess in code, where it reads as a decision someone made. `rca` runs unblocked — root-causing needs no ruling, and what it turns up is often the evidence that closes a gap.
+
+**Three adjacent concepts, two exits.** `## Non-goals` is *decided against*; `## Open gaps` is *undecided, someone else's call*; §5.5's **spec gap** is *`verify` found something nobody considered*. The last two resolve through the same pair of exits — a new acceptance criterion, or a non-goal — so this is one mechanism with an early entry point and a late one, not a third concept.
 
 ### Blocking — a skill cannot be written without these
 
@@ -559,9 +640,10 @@ The ticket ID for artifact-naming purposes is the last path segment, so a pointe
 | Artifact | Filename | Written by |
 |---|---|---|
 | ticket text | `<id>-ticket.md` | the operator, before any stage (Q10) |
-| spec | `<id>-spec.md` | `spec` |
+| spec | `<id>-spec.md` | `spec` **or** the operator — two producers, see Q19 |
 | root cause | `<id>-rca.md` | `rca` — bug tickets only |
 | dev QA plan | `<id>-qa.md` | `impl` |
+| adversarial QA plan | `<id>-qa-adv.md` | `verify`, authored blind (§5.1a) |
 | end-user QA plan | `<id>-qa-e2e.md` | `verify` (§5.2) |
 | verification evidence | `<id>-verify-trace.md` | `verify` (Q15) |
 | PR body draft | `<id>-pr.md` | `pr-create` (Q6) |
@@ -730,6 +812,18 @@ Wrote <ticket-id>-qa-e2e.md — 6 cases. Run them, then:
 
 **Q8 — What happens when an input artifact is missing or malformed?** — **RESOLVED.** Fail fast, and say three things: which artifact is missing, the exact path it was looked for at, and the command that produces it. Never improvise a substitute, never proceed on a partial read. Same shape as Q10's `ticket.md` message:
 
-> `No <ticket-id>-spec.md at <resolved-path>. Run /loop-eng spec <ticket-id> first.`
+> `No <ticket-id>-qa.md at <resolved-path>. Run /loop-eng impl <ticket-id> first.`
+
+**`<id>-spec.md` names both producers** (Q19), because the right one depends on the ticket and sending an ambiguous one into `spec` only bounces it straight back out:
+
+> ```
+> No <ticket-id>-spec.md at <resolved-path>.
+>
+>   Ticket already names the observable outcome?
+>     → /loop-eng spec <ticket-id>
+>
+>   Ticket names a want, not an outcome?
+>     → grill it with your own method, save the result there, then re-run.
+> ```
 
 *(Numbers retained — other documents cite "Q7", "Q8", "Q9".)*

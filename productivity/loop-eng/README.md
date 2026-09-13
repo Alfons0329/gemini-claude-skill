@@ -24,13 +24,22 @@ sequenceDiagram
     Note over Op,Tgt: Before stage 1 — the operator pastes the ticket text by hand
     Op->>Prog: write <id>-ticket.md
 
+    alt ticket names an observable outcome
     rect rgb(235, 235, 250)
-    Note over Sess: spec
+    Note over Sess: spec — route B
     Op->>Sess: /loop-eng spec <id>
     Sess->>Prog: read <id>-ticket.md
     Sess->>Tgt: read CLAUDE.md (proceed on a named fallback if absent)
     Sess->>Prog: write <id>-spec.md
     Sess-->>Op: report, stop
+    end
+    else ticket names only a want
+    rect rgb(245, 240, 230)
+    Note over Op: route A — grilled outside this skill,<br/>by whatever method the team uses
+    Op->>Sess: /loop-eng spec <id>
+    Sess-->>Op: names a want, not an outcome — grill it first
+    Op->>Prog: write <id>-spec.md by hand, same four sections
+    end
     end
 
     opt ticket is a bug
@@ -47,6 +56,7 @@ sequenceDiagram
     Note over Sess: impl — fresh session
     Op->>Sess: /loop-eng impl <id>
     Sess->>Prog: read <id>-spec.md (+ <id>-rca.md on a bug)
+    Sess-->>Op: any ## Open gaps entry unruled -> stop, write no code
     Sess->>Op: confirm seams — the one in-session wait in the whole pipeline
     Op-->>Sess: confirmed
     Sess->>Tgt: climb the ladder, commit code
@@ -57,10 +67,12 @@ sequenceDiagram
     rect rgb(250, 250, 225)
     Note over Sess: verify — fresh session, never saw impl's reasoning
     Op->>Sess: /loop-eng verify <id>
+    Sess->>Prog: read <id>-spec.md only — not yet <id>-qa.md
+    Sess->>Prog: write <id>-qa-adv.md (blind), commit
     Sess->>Prog: read <id>-qa.md, the scaffold
     Sess->>Sess: pre-flight (control case, or a documented fallback)
-    Sess->>Tgt: dev pass, then E2E pass
-    Sess->>Prog: write Result: lines, <id>-verify-trace.md
+    Sess->>Tgt: dev pass, adversarial pass, then E2E pass
+    Sess->>Prog: write Result: lines, coverage gap, <id>-verify-trace.md
     Sess-->>Op: PASS, stop — or classify a FAIL and exit
     end
 
@@ -105,6 +117,52 @@ Nothing above names a language, a framework, or a host — that's the point: the
 
 ---
 
+## Where it loops, and what stops each loop
+
+The diagram above runs left to right. What it can't show is the three places work goes *backwards* — and every one of them needs something written down to stop, because each `verify` is a fresh session that remembers nothing.
+
+```mermaid
+stateDiagram-v2
+    direction LR
+
+    state "SPEC<br/>criteria · non-goals · open gaps" as SPEC
+    state "IMPL" as IMPL
+    state "VERIFY<br/>author blind → pre-flight →<br/>dev → adversarial → E2E" as VERIFY
+    state "PR" as PR
+
+    [*] --> SPEC
+    SPEC --> IMPL: every gap ruled
+    SPEC --> SPEC: gap open — decider rules, ruling becomes a criterion or a non-goal
+    IMPL --> VERIFY
+    VERIFY --> PR: all three passes green
+
+    VERIFY --> IMPL: code bug — fix-qa, 2 attempts then escalate
+    VERIFY --> SPEC: spec gap — nobody decided this; 0 retries
+    VERIFY --> VERIFY: wrong case — operator corrects it, logs why
+    VERIFY --> [*]: environment red — 0 retries, go fix the machine
+```
+
+| Loop | What's turning | What stops it |
+|---|---|---|
+| `verify` → `impl` | the code doesn't meet a criterion | 2 attempts, then it escalates to you |
+| `verify` → itself | a case was written wrong | the `## Correction log` row |
+| `verify` → `spec` | the adversary found something undecided | **the `## Non-goals` line** |
+
+The third one is why `## Non-goals` is required rather than nice to have. Without it, a rejected case looks exactly like an unasked one, so the next fresh session raises it again, and the one after that:
+
+```
+no non-goals:   run 1 "what about null?" → "we don't handle null"
+                run 2 "what about null?" → "...I just said that"
+                run 3 "what about null?" → forever
+
+with them:      run 1 "what about null?" → written into ## Non-goals
+                run 2 the case is dropped before it's even written
+```
+
+A refusal that lives only in your head gets re-litigated forever. One in the spec is read by every session that follows.
+
+---
+
 ## Setup — ten minutes, day one
 
 ```bash
@@ -144,7 +202,12 @@ mkdir -p ~/progress/<ticket-id>
 /loop-eng spec <ticket-id>
 ```
 
-Read what comes back. Where the spec is wrong, the ticket was ambiguous — which is now a specific question to ask your team instead of a vague feeling that you are lost.
+**One of two things comes back**, and the second is not a failure:
+
+- **A spec.** The ticket already named an outcome. Read it — where it's wrong, the ticket was ambiguous, which is now a specific question to ask your team instead of a vague feeling that you are lost.
+- **"This names a want, not an outcome."** The stage won't guess a shape for a ticket nobody has pinned down. Grill it yourself — with whatever method you use — and save the result to `<ticket-id>-spec.md` with the same four sections. Downstream, nothing can tell the two apart.
+
+Either way you end up with the same file. **Park what you can't settle in `## Open gaps`, each with options and your recommendation**, and go get it ruled on. `impl` won't start while one is open, which in week one is the point: you are new, and the fastest way to learn who owns what is to need a decision from them.
 
 ---
 
@@ -192,12 +255,14 @@ Six sessions. One stage each.
 
 ---
 
-## Four rules
+## Six rules
 
 1. **One stage, one session.** The design rests on this. A session that wrote the code cannot be trusted to test it.
 2. **The same `--human` on three tickets running** was never per-ticket context. Move it to `CLAUDE.md`.
 3. **Never give `~/progress` a public remote.** Real ticket IDs, real service names, real defect writeups.
 4. **A red test is not automatically a code bug.** The control case decides. A broken environment gets zero retries — go fix the machine.
+5. **`verify` writes its own cases before it reads `impl`'s.** A plan written by the builder can only test what the builder thought of. The second plan is where the missing case shows up.
+6. **Never hand a decider a bare question.** A gap carries options and your recommendation, or it isn't a gap — and if you can't say why the call isn't yours, it is. Make it and move.
 
 ---
 
@@ -247,10 +312,13 @@ There is a fourth, and it is the only bad one: **green with nothing behind it.**
 
 **It is worse than no test.** A PR saying *no tests, here is why* gets read carefully. A PR saying *tested ✓* gets waved through. A faked pass spends your reviewer's attention and buys nothing with it — and then it ships.
 
-Three things in the design stop it, none relying on good intentions:
+There is a third way it fails, and it is the quietest: **a pass that ran, ran for real, and tested the wrong set of things.** The plan `verify` runs was written by `impl` — so whatever `impl` never thought of is simply absent from it, and an absent case cannot go red. Every case green, nothing behind the green but the builder's own imagination.
+
+Four things in the design stop all three, none relying on good intentions:
 
 - **The control case** (§5.5) — run a test that predates your change. Green means the environment is real. Red means you are measuring a broken machine, and every conclusion below it is worthless.
-- **`<ticket-id>-verify-trace.md`** (§9 Q15) — a claim with a record behind it can be checked; a claim without it can only be believed.
+- **The adversarial pass** (§5.1a) — `verify` writes a second plan from the spec *before* it opens `impl`'s, then reports which of its cases had no counterpart. That list is the shape of the blind spot, written down.
+- **`<ticket-id>-verify-trace.md`** (§9 Q15) — a claim with a record behind it can be checked; a claim without it can only be believed. It records, per case, whether it reached the real seam or a double; a case satisfied entirely by a stub is logged `not run`, never `PASS`.
 - **Zero retries on a broken environment** (§5.6) — escalate immediately, never retry. Retrying is precisely how *let me just mock it* gets invented.
 
 ---

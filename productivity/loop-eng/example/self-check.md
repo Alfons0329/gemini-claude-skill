@@ -1,6 +1,6 @@
 # Self-check — does the loop actually close?
 
-Run this **after** writing `SKILL.md` and the six `reference/*.md` files, before calling the build done.
+Run this **after** writing `SKILL.md` and the six `reference/*.md` files, before calling the build done. Re-run it after any change to the stage contract.
 
 Nothing here executes code. It is a paper trace: walk a requirement through every stage and confirm each handoff lands.
 
@@ -42,7 +42,13 @@ Fill this in from the files you just wrote. Every cell is a citation.
 | `pr-review` | | | |
 | `kb-update` | | | |
 
-**Fails if** any cell is empty, or any stage's stated input is not some earlier stage's stated output.
+**Fails if** any cell is empty, or any stage's stated input is not produced by *some* named producer earlier in the flow.
+
+**Not always an earlier stage.** Two artifacts are legitimately operator-produced: `<id>-ticket.md` always, and `<id>-spec.md` on the route-A ticket that was grilled outside this skill (`../SPEC.md` §9 Q19). A cell citing the operator passes; a cell citing nobody does not. And every place that tells a reader how to obtain `<id>-spec.md` must name **both** producers — a message sending an ambiguous ticket into `/loop-eng spec` sends it somewhere that will bounce it straight back out.
+
+```bash
+grep -rn 'loop-eng spec' .        # from productivity/loop-eng/
+```
 
 The classic break: `verify` says it reads "the QA plan" while `impl` says it writes `<id>-qa.md`. Two names, one file, and a cold session that finds neither.
 
@@ -82,12 +88,17 @@ No dead ends. Cite where each is handled:
 |---|---|
 | `verify` red, environment implicated | escalate immediately, **zero** retries (§5.6) |
 | `verify` red, code bug | `impl <id> fix-qa`, at most 2 attempts (§5.6) |
+| `verify` red, adversarial case presses no criterion | **spec gap** — 0 retries, operator rules: a new criterion or a non-goal (§5.5) |
 | still red after the budget | stop, hand the human the repro, both attempts, and the ranked hypotheses |
 | security finding in `pr-review` | blocks, writes `<id>-security-review.md`, repairs via `impl <id> fix-sec` (§6.1) |
 | an input artifact is missing or malformed | fail fast naming the artifact, the path searched, and the command that produces it (§9 Q8) |
+| `<id>-spec.md` missing | fail fast naming **both** producers, not just the stage (§9 Q19) |
+| `## Open gaps` entry still unruled at `impl` | `impl` stops before the ladder and names the gap; `rca` is unaffected (§9 Q19) |
 | ticket directory not found, or found twice | create-and-say, or stop and list the matches (§9 Q13) |
 
 **Fails if** any row has no home, or if two rows land in the same place with different retry budgets.
+
+**Also fails if** any `[GAP]` in a spec lacks `Recommend:` or `Not ours:`. A gap without a recommendation escalates the thinking along with the decision; a gap that cannot say why the call isn't engineering's is a decision the engineer should have made.
 
 ---
 
@@ -117,8 +128,28 @@ Open a new session and give it exactly this:
 
 ---
 
+## Check G — a blind spot does not survive the handoff
+
+The check the adversarial pass exists for (`../SPEC.md` §5.1a). Trace a criterion whose failure mode the spec never mentions — say an input that can be null where nothing says what null means.
+
+1. Where does `verify` author `<id>-qa-adv.md`, and what is it forbidden from reading first?
+2. Which bucket generates the null case whether or not `impl` imagined it?
+3. Where does `Expected:` come from, such that the case can actually go red rather than agreeing with whatever the code returns?
+4. The case presses no existing criterion. Which triage row catches it, and what are its two exits?
+5. The operator adds a criterion. What makes the **next** `verify` re-author `<id>-qa-adv.md` instead of reusing a file that predates it?
+
+**Fails if** any step has no citation, or if any path exists by which the case is generated, passes, and nobody learns anything. The failure this check prevents is the one that looks identical to success: every case green, because the missing case was never written.
+
+Also confirm the reverse — that the guard cannot be quietly switched off:
+
+- [ ] Is there any documented way to run `verify` and skip the adversarial pass alone? (Expect: no. Whole-stage skip only, stated in the PR body.)
+- [ ] During `fix-qa`, what may `impl` change in `<id>-qa.md` and `<id>-qa-adv.md`? (Expect: nothing.)
+- [ ] An adversarial case satisfied entirely by a mock — what is written in the trace? (Expect: `not run`, never `PASS`.)
+
+---
+
 ## Passing
 
-All six checks, every citation filled, `SPEC.md` §8's eight items written.
+All seven checks, every citation filled, `SPEC.md` §8's eight items written.
 
 Then the build is done — not before.

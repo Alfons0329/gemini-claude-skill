@@ -2,6 +2,8 @@
 
 Run against `example/self-check.md` after the build session wrote `SKILL.md` and the six `reference/*.md` files (commits `157b6b3`, `f3f4463`, `ee62146`).
 
+> **Superseded in part.** The adversarial-verify change (`SPEC.md` §9 Q18, Q19) landed after this run. Every `file:line` citation below predates it and no longer resolves, and Checks A, D and G need re-running against the current files. The reasoning stands; the line numbers do not.
+
 Checks A–E ran here. **Check F is deliberately not run in this session** — it requires a session that has not read these files, for the reason the check itself gives.
 
 Paths below are relative to `productivity/loop-eng/`.
