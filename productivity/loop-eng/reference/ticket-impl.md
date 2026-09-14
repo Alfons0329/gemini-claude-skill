@@ -57,7 +57,23 @@ The ladder decides *whether code gets written*; TDD governs *how code that must 
 
 Produced alongside the code, for `verify` to consume:
 
-- **`<id>-qa.md`** — the dev-perspective test plan: what was actually tested during red→green. One case per acceptance criterion, each with an explicit `Setup:`, `Action:`, `Expected:` block a cold reader can execute. Two fixed sections are mandatory:
+- **`<id>-qa.md`** — the dev-perspective test plan: what was actually tested during red→green. One case per acceptance criterion, each with an explicit `Setup:`, `Action:`, `Expected:` block.
+
+  **`Action:` is a command, not a sentence.** A `curl` line, a test function name, a CLI invocation — something a cold session pastes and runs. `Expected:` is the concrete value or exit status it should produce, from the spec rather than from what the code returned (see "Anti-patterns", *Tautological*):
+
+  ```
+  Action:    curl -s -o /dev/null -w '%{http_code}' -X POST localhost:8080/api/upload -F file=@fixtures/big.bin
+  Expected:  413
+  ```
+
+  ```
+  Action:    <describe submitting a request and checking the response looks right>
+  Expected:  <"correct">
+  ```
+
+  The second shape reads like a test and runs like nothing. It also breaks the stage downstream: `verify` compares this plan against the one it wrote blind and reports what only its own covers (`reference/ticket-verify.md`), and **two lists only diff when both sides are concrete** — prose matches everything and nothing.
+
+  Two fixed sections are mandatory:
   - `## Test Environment` — **checkable preconditions, not prose.** Each precondition pairs with the command that confirms it, so `verify`'s pre-flight has something to run rather than something to read. Name which existing case serves as the **control case** for that pre-flight — it must predate this ticket and not touch the change.
   - `## Correction log` — an empty table, header only. `verify` never writes here; only the operator does, when a case's `Expected:`/`Setup:`/`Action:` turns out to be wrong (`reference/ticket-verify.md`).
 - **`<id>-qa-e2e.md`** — a **bare scaffold, not a test plan.** Name only *what screens or flow this ticket touches* (e.g. "the hello-world button on the home screen"). Do **not** write concrete steps, click order, or pass/fail assertions — that decision belongs entirely to `verify`, specifically so this session can't unconsciously write an end-user test shaped around what it already knows will pass.
@@ -69,6 +85,10 @@ Commit code and both artifacts to the target repo's feature branch when done, th
 Entered as `/loop-eng impl <id> fix-qa`, only from `verify`'s classification of a failure as a **code bug** (`reference/ticket-verify.md`, "Triaging a failure") — never for an environment failure or a bad QA case, and never after a PR is already open (SKILL.md, "Repair-mode scope").
 
 **The test plans are frozen here** — SKILL.md, "The artifact contract." Change the code until the cases pass and add regression tests in the target repo; the three QA plans come out of this session byte-identical. A case that is genuinely wrong is the operator's to correct through the `## Correction log`, which is also the record of why it moved.
+
+**The blast radius is frozen too.** Repair the named failure and nothing else: the public interfaces stay as they are, the path that already passes keeps its logic, and modules the report doesn't implicate are not touched. Refactoring is review-time work in either mode (see "The ladder and TDD run at different moments" above) — and a session told to make one boundary case pass will otherwise reach for the redesign that makes it *elegant*, taking working behaviour with it. The give-away is a diff much larger than the failure.
+
+Where the fix genuinely requires changing a public interface, that is a design decision, not a repair: report it with the reasoning and stop, per SKILL.md's "Escalation." A green suite is not worth a silently changed contract.
 
 `verify` already built the tight, discriminating repro and handed it forward. This mode runs the rest of the diagnosis, bounded at **2 attempts** (SKILL.md, "Escalation"):
 
@@ -87,6 +107,7 @@ Entered as `/loop-eng impl <id> fix-sec`, only from a `pr-review` security-gate 
 - The ladder was climbed and the rung actually stopped at is named, even if it's rung 7.
 - Any deliberate shortcut carries a `ponytail:` comment naming the ceiling.
 - The seam list was confirmed with the operator before the first test was written.
-- `<id>-qa.md` has one case per acceptance criterion, a checkable `## Test Environment` with a named control case, and an empty `## Correction log`.
+- `<id>-qa.md` has one case per acceptance criterion, every `Action:` is a runnable command rather than a description, a checkable `## Test Environment` with a named control case, and an empty `## Correction log`.
 - `<id>-qa-e2e.md` names a flow, not steps or assertions.
 - On `fix-qa`, the attempt count never exceeds 2, escalation happened exactly at the cap, and all three QA plans are unchanged.
+- On `fix-qa`, the diff touches only what the failure implicates — no public interface moved, no passing path rewritten, no untouched module refactored.

@@ -111,6 +111,8 @@ Coverage gap — 6 of 14 adversarial cases had no counterpart in the dev plan:
 
 This list is the stage's most useful output even when every case passes: it is a written record of what the implementation was never asked about. `kb-update` harvests from it — a gap that recurs across tickets is a house pattern nobody wrote down.
 
+**A dev case whose `Action:` is prose rather than a command cannot be matched or run**, and `reference/ticket-impl.md` requires a command. Treat it as a **wrong test step** (step 5) rather than guessing what it meant: the operator rewrites it as something runnable and logs the correction. Counting it as covered would hide a gap behind a sentence that sounds like a test.
+
 **Record what each case actually reached.** For every case, the trace says whether it ran against the real seam or against a double. A case satisfied entirely by a stub proves the stub agrees with itself, so it is recorded `not run`, never `PASS` — a green with nothing behind it is worse than no case at all, because it spends a reviewer's trust and buys nothing with it.
 
 Don't proceed to the E2E pass until this pass is green (or explicitly triaged per step 4).
