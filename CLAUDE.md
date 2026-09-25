@@ -22,6 +22,7 @@ A personal collection of agent **skills** — packaged prompt/workflow definitio
   - `interview-me/` — interactive interviewing & spec drafting skill.
   - `notion-to-notebooklm/` — Notion recursive markdown export for NotebookLM & podcast prompts.
   - `update-notion/` — placeholder for Notion sync skill.
+- `output-styles/` — Claude Code output styles (e.g. `diagram-first.md`). Claude Code only; installed by `setup.sh`.
 - `shared/scripts/` — helper scripts invoked by skills at runtime (e.g., `notion_to_markdown.py`).
 - `setup.sh` — installs the skills onto a machine (symlinks, private progress repo, personal context file). Idempotent.
 - `onboard-checklist.md` — how to adopt this skill set at any company, and where each kind of `CLAUDE.md` belongs.

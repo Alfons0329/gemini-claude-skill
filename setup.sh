@@ -70,6 +70,24 @@ for dir in "${AGENT_DIRS[@]}"; do
   say ""
 done
 
+# ------------------------------------------------------------ 1b. output styles
+# Claude Code only. Gemini and Antigravity have no output-style slot.
+STYLE_DIR="$HOME/.claude/output-styles"
+say "==> $STYLE_DIR"
+run mkdir -p "$STYLE_DIR"
+for src in "$REPO"/output-styles/*.md; do
+  [ -f "$src" ] || continue
+  name="$(basename "$src")"
+  dst="$STYLE_DIR/$name"
+  if [ -e "$dst" ] && [ ! -L "$dst" ]; then
+    say "    SKIP $name — a real file is already there, not overwriting"
+    continue
+  fi
+  run ln -sfn "$src" "$dst"
+  say "    link $name"
+done
+say ""
+
 # ------------------------------------------------------- 2. the progress repo
 # Private by design. Real ticket IDs, service names, and RCA writeups land here.
 say "==> $PROGRESS_ROOT"
